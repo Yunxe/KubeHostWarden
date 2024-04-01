@@ -1,7 +1,9 @@
 package main
 
 import (
-	"kubehostwarden/backend/opscenter/host"
+	"context"
+	mysql "kubehostwarden/backend/db"
+	"kubehostwarden/backend/opscenter/probe"
 	"log"
 	"os"
 	"strconv"
@@ -14,6 +16,10 @@ func main() {
 		log.Fatalf("Error loading .env file")
 	}
 
+	if err:=mysql.SetupMysql();err != nil {
+		panic("failed to setup mysql")
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "22"
@@ -22,7 +28,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = host.Register(host.SSHInfo{
+	err = probe.Register(context.Background(),probe.SSHInfo{
 		Host:     os.Getenv("HOST"),
 		Port:     pint,
 		User:     os.Getenv("USER"),

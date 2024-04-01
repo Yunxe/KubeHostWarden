@@ -16,17 +16,17 @@ type mysqlConfig struct {
 	database string
 }
 
+var mc *MysqlClient
+
 type MysqlClient struct {
-	client *gorm.DB
+	Client *gorm.DB
 }
 
-func SetupMysql(database *gorm.DB) *MysqlClient {
-	if database != nil {
-		return &MysqlClient{
-			client: database,
-		}
-	}
+func GetClient() *MysqlClient {
+	return mc
+}
 
+func SetupMysql() error {
 	config := &mysqlConfig{
 		user:     os.Getenv("MYSQL_USER"),
 		password: os.Getenv("MYSQL_PASSWORD"),
@@ -38,10 +38,8 @@ func SetupMysql(database *gorm.DB) *MysqlClient {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", config.user, config.password, config.address, config.port, config.database)
 	client, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		return fmt.Errorf("failed to connect database: %w", err)
 	}
-
-	return &MysqlClient{
-		client: client,
-	}
+	mc = &MysqlClient{Client: client}
+	return nil
 }

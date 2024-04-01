@@ -1,7 +1,6 @@
 package host
 
 import (
-	"bytes"
 	"fmt"
 	"net"
 	"time"
@@ -14,6 +13,23 @@ type SSHInfo struct {
 	Port     int
 	User     string
 	Password string
+	OSType   string
+}
+
+type Host struct {
+	Hostname      string   // 主机名
+	OS            string   // 操作系统名称，例如 macOS, Ubuntu
+	OSVersion     string   // 操作系统版本
+	Kernel        string   // 内核名称，例如 Darwin, Linux
+	KernelVersion string   // 内核版本
+	Arch          string   // 架构，例如 x86_64, arm64
+	IPAddr        string   // 主机的IP地址
+	MemoryTotal   string   // 内存总量，保持统一的单位
+	DiskTotal     string   // 磁盘总量，保持统一的单位
+}
+
+type prober struct {
+	sshClient *ssh.Client
 }
 
 func Register(info SSHInfo) error {
@@ -42,20 +58,16 @@ func probe(info SSHInfo) error {
 	client, err := ssh.Dial("tcp", addr, config)
 	if err != nil {
 		return fmt.Errorf("failed to dial: %s", err)
-
 	}
-
-	session, err := client.NewSession()
+	prober := prober{
+		sshClient: client,
+	}
+	switch info.OSType {
+	case "darwin":
+		_,err = probeDarwin(prober)
+	}
 	if err != nil {
-		return fmt.Errorf("failed to create session: %s", err)
+		return err
 	}
-	defer session.Close()
-
-	var b bytes.Buffer
-	session.Stdout = &b
-	if err := session.Run("system_profiler SPHardwareDataType"); err != nil {
-		return fmt.Errorf("failed to run: %s", err)
-	}
-	fmt.Println(b.String())
 	return nil
 }

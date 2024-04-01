@@ -27,6 +27,7 @@ func main() {
 		Port:     pint,
 		User:     os.Getenv("USER"),
 		Password: os.Getenv("PASSWORD"),
+		OSType:   os.Getenv("OSTYPE"),
 	})
 	if err != nil {
 		panic(err)

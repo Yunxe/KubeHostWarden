@@ -66,6 +66,10 @@ func (ph *probeHelper) createPod(ctx context.Context) error {
 							Name:  "OSTYPE",
 							Value: ph.sshInfo.OSType, 
 						},
+						{
+							Name:  "HOST_ID",
+							Value: ph.host.Id,
+						},
 					},
 				},
 			},

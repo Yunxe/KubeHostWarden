@@ -3,8 +3,10 @@ package host
 import (
 	"context"
 	"fmt"
-	"kubehostwarden/types"
+	"kubehostwarden/db"
 	"net"
+	"os"
+	"sync"
 	"time"
 
 	"github.com/influxdata/influxdb-client-go/v2/api"
@@ -12,25 +14,108 @@ import (
 )
 
 type Collector struct {
-	Client   *ssh.Client
-	writeApi api.WriteAPI
-	OS       string
+	metricType string
+	client     *ssh.Client
+	writeApi   api.WriteAPI
+	os         string //darwin, linux
+	frequency  time.Duration
+
+	cpuDataCh    chan *CPU
+	memoryDataCh chan *Memory
+
+	ctx    context.Context
+	cancel context.CancelFunc
+	wg     sync.WaitGroup
 }
 
-type CollectorAPI interface {
-	DoCollectCPUDarwin()
+func NewHostCollectors(ctx context.Context) map[string]*Collector {
+	var collectorMap = make(map[string]*Collector)
+
+	// 初始化collectorMap
+	collectorMap["CPU"] = &Collector{
+		cpuDataCh: make(chan *CPU, 5),
+	}
+	collectorMap["Memory"] = &Collector{
+		memoryDataCh: make(chan *Memory, 5),
+	}
+	// collectorMap["Disk"] = &Collector{}
+	// collectorMap["Network"] = &Collector{}
+
+	for mt, collector := range collectorMap {
+		// init context
+		collector.ctx, collector.cancel = context.WithCancel(ctx)
+
+		// set metric type
+		collector.metricType = mt
+
+		// set os type
+		collector.os = os.Getenv("OSTYPE")
+
+		// establish ssh connection
+		sshClient, err := NewSSHClient()
+		if err != nil {
+			fmt.Printf("Failed to init %v ssh client: %s\n", mt, err)
+			continue
+		}
+		collector.client = sshClient
+
+		// establish influxdb write api
+		writeApi := db.GetInfluxClient().Client.WriteAPI(
+			os.Getenv("INFLUXDB_ORG"),
+			os.Getenv("INFLUXDB_BUCKET"),
+		)
+		collector.writeApi = writeApi
+
+		// set default frequency
+		collector.frequency = 5 * time.Second
+	}
+
+	return collectorMap
 }
 
-func Connect(ctx context.Context, info types.SSHInfo) (*ssh.Client, error) {
+func (c *Collector) DoCollect() {
+	switch c.metricType {
+	case "CPU":
+		c.DoCollectCPU()
+	// case "Memory":
+	// 	c.DoCollectMemory()
+	}
+}
+
+func (c *Collector) Close() {
+	if c.cancel != nil {
+		c.cancel()
+	}
+
+	c.wg.Wait()
+
+	if c.client != nil {
+		if err := c.client.Close(); err != nil {
+			fmt.Printf("Failed to close ssh client: %s\n", err)
+		}
+	}
+
+	switch c.metricType {
+	case "CPU":
+		if c.cpuDataCh != nil {
+			close(c.cpuDataCh)
+		}
+	case "Memory":
+		if c.memoryDataCh != nil {
+			close(c.memoryDataCh)
+		}
+	}
+
+}
+
+func NewSSHClient() (*ssh.Client, error) {
 	// Connect to ssh endpoint
-	portStr := fmt.Sprintf("%d", info.Port)
-
-	addr := net.JoinHostPort(info.EndPoint, portStr)
+	addr := net.JoinHostPort(os.Getenv("HOST"), os.Getenv("PORT"))
 
 	config := &ssh.ClientConfig{
-		User: info.User,
+		User: os.Getenv("USER"),
 		Auth: []ssh.AuthMethod{
-			ssh.Password(info.Password),
+			ssh.Password(os.Getenv("PASSWORD")),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		Timeout:         5 * time.Second,
@@ -42,12 +127,4 @@ func Connect(ctx context.Context, info types.SSHInfo) (*ssh.Client, error) {
 	}
 
 	return client, nil
-}
-
-func NewCollector(client *ssh.Client, os string, writeApi api.WriteAPI) *Collector {
-	return &Collector{
-		Client:   client,
-		OS:       os,
-		writeApi: writeApi,
-	}
 }

@@ -11,3 +11,4 @@ func (Memory) TableName() string {
 	return "memory"
 }
 
+func (c *Collector) DoCollectMemory() {}

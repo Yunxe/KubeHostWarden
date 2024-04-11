@@ -20,61 +20,77 @@ type CPU struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-func (CPU) TableName() string {
+func (CPU) Name() string {
 	return "cpu"
 }
 
-var cpuDataChan = make(chan *CPU, 10) // 带缓冲的channel
-
 func (c *Collector) DoCollectCPU() {
+	c.wg.Add(1)
 	go func() {
-		ticker := time.NewTicker(5 * time.Second)
+		defer c.wg.Done()
+		ticker := time.NewTicker(c.frequency)
 		defer ticker.Stop()
 
-		for range ticker.C {
-			var cpu *CPU
-			switch c.OS {
-			case "darwin":
-				cpu = c.DoCollectCPUDarwin()
-				// 可以添加更多的case来支持不同的操作系统
-			}
-			if cpu != nil {
-				cpuDataChan <- cpu
+		for {
+			select {
+			case <-c.ctx.Done(): 
+				return 
+			case <-ticker.C:
+				var cpu *CPU
+				switch c.os {
+				case "darwin":
+					cpu = c.DoCollectCPUDarwin()
+					// 可以添加更多的case来支持不同的操作系统
+				}
+				if cpu != nil {
+					c.cpuDataCh <- cpu
+				}
 			}
 		}
 	}()
 
+	c.wg.Add(1)
 	go func() {
+		defer c.wg.Done()
 		var p *write.Point
 
-		errCh:=c.writeApi.Errors()
+		errCh := c.writeApi.Errors()
 		go func() {
-			for err := range errCh {
-				fmt.Printf("write error: %s\n", err.Error())
+			for {
+				select {
+				case err := <-errCh:
+					fmt.Printf("write error: %s\n", err.Error())
+				case <-c.ctx.Done():
+					return
+				}
 			}
 		}()
 
-		for cpuData := range cpuDataChan {
-			p = influxdb2.NewPoint("cpu",
-				map[string]string{
-					"host_id": cpuData.HostId,
-				},
-				map[string]interface{}{
-					"idle":   cpuData.Idle,
-					"system": cpuData.System,
-					"user":   cpuData.User,
-				},
-				cpuData.CreatedAt,
-			)
-			c.writeApi.WritePoint(p)
-			
-			fmt.Println(cpuData)
+		for {
+			select {
+			case <-c.ctx.Done(): 
+				return 
+			case cpuData := <-c.cpuDataCh:
+				p = influxdb2.NewPoint("cpu",
+					map[string]string{
+						"host_id": cpuData.HostId,
+					},
+					map[string]interface{}{
+						"idle":   cpuData.Idle,
+						"system": cpuData.System,
+						"user":   cpuData.User,
+					},
+					cpuData.CreatedAt,
+				)
+				c.writeApi.WritePoint(p)
+				fmt.Println(cpuData)
+			}
 		}
 	}()
 }
 
 func (c *Collector) DoCollectCPUDarwin() *CPU {
-	session, err := c.Client.NewSession()
+	session, err := c.client.NewSession()
 	if err != nil {
 		fmt.Println("Failed to create session: ", err)
 		return nil

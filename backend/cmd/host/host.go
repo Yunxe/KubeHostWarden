@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"kubehostwarden/db"
 	"kubehostwarden/host"
-	"kubehostwarden/types"
 	"os"
-	"strconv"
+	"os/signal"
+	"syscall"
 
 	"github.com/joho/godotenv"
 )
@@ -31,29 +31,26 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	writeApi := db.GetInfluxClient().Client.WriteAPI(os.Getenv("INFLUXDB_ORG"), os.Getenv("INFLUXDB_BUCKET"))
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "22"
-	}
-	pint, err := strconv.Atoi(port)
-	if err != nil {
-		panic(err)
-	}
-	client, err := host.Connect(context.Background(), types.SSHInfo{
-		EndPoint: os.Getenv("HOST"),
-		Port:     pint,
-		User:     os.Getenv("USER"),
-		Password: os.Getenv("PASSWORD"),
-		OSType:   os.Getenv("OSTYPE"),
-	})
-	if err != nil {
-		panic(err)
-	}
-	collector := host.NewCollector(client, os.Getenv("OSTYPE"), writeApi)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() 
+	
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
-	collector.DoCollectCPU()
+	collectors := host.NewHostCollectors(ctx)
+	for _, collector := range collectors {
+		go collector.DoCollect() 
+	}
 
-	select {}
+	go func() {
+		<-signals 
+		fmt.Println("Shutting down gracefully...")
+		cancel() 
+	}()
+
+	<-ctx.Done() 
+	for _, collector := range collectors {
+		collector.Close() 
+	}
 }

@@ -1,42 +1,31 @@
 package main
 
 import (
-	"context"
-	mysql "kubehostwarden/backend/db"
-	"kubehostwarden/backend/opscenter/probe"
-	"log"
-	"os"
-	"strconv"
+	"flag"
+	"fmt"
+	mysql "kubehostwarden/db"
+	"kubehostwarden/opscenter/probe"
 
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading .env file")
+	var envFilePath string
+	flag.StringVar(&envFilePath, "env", "", "Path to .env file")
+	flag.Parse()
+
+	if envFilePath != "" {
+		err := godotenv.Load(envFilePath)
+		if err != nil {
+			fmt.Printf("Error loading .env file: %v\n", err)
+		} else {
+			fmt.Printf("Loaded .env file from %s\n", envFilePath)
+		}
 	}
 
-	if err:=mysql.SetupMysql();err != nil {
+	if err := mysql.SetupMysql(); err != nil {
 		panic("failed to setup mysql")
 	}
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "22"
-	}
-	pint, err := strconv.Atoi(port)
-	if err != nil {
-		panic(err)
-	}
-	err = probe.Register(context.Background(),probe.SSHInfo{
-		Host:     os.Getenv("HOST"),
-		Port:     pint,
-		User:     os.Getenv("USER"),
-		Password: os.Getenv("PASSWORD"),
-		OSType:   os.Getenv("OSTYPE"),
-	})
-	if err != nil {
-		panic(err)
-	}
-
+	probe.NewServer()
 }

@@ -4,9 +4,49 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"kubehostwarden/types"
+	"net"
 	"regexp"
 	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	"golang.org/x/crypto/ssh"
 )
+
+func (ph *probeHelper) probe(ctx context.Context, info types.SSHInfo) error {
+	portStr := fmt.Sprintf("%d", info.Port)
+
+	addr := net.JoinHostPort(info.EndPoint, portStr)
+
+	config := &ssh.ClientConfig{
+		User: info.User,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(info.Password),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         5 * time.Second,
+	}
+
+	client, err := ssh.Dial("tcp", addr, config)
+	if err != nil {
+		return fmt.Errorf("failed to dial: %s", err)
+	}
+	ph.sshClient = client
+	ph.host = &Host{}
+
+	switch info.OSType {
+	case "darwin":
+		err := ph.probeDarwin(ctx)
+		if err != nil {
+			return err
+		}
+		ph.host.IPAddr = info.EndPoint
+	}
+	uuid := uuid.New().String()
+	ph.host.Id = uuid
+	return nil
+}
 
 func (ph *probeHelper) probeDarwin(ctx context.Context) error {
 	session, err := ph.sshClient.NewSession()

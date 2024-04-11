@@ -1,0 +1,29 @@
+# 创建一个ClusterRole，允许操作Pods
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  # "name" 是这个ClusterRole的名字
+  name: pod-creator
+rules:
+- apiGroups: [""]
+  #
+  resources: ["pods"]
+  verbs: ["create", "get", "list", "watch", "delete"]
+
+---
+
+# 创建一个ClusterRoleBinding，将上面的角色绑定到"default"命名空间的"default"服务账户
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pod-creator-binding
+subjects:
+- kind: ServiceAccount
+  # "name" 是绑定的服务账户的名字
+  name: default
+  # "namespace" 是服务账户的命名空间
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: pod-creator
+  apiGroup: rbac.authorization.k8s.io

@@ -2,22 +2,15 @@ package probe
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	mysql "kubehostwarden/backend/db"
-	"net"
+	mysql "kubehostwarden/db"
+	"kubehostwarden/types"
+	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"golang.org/x/crypto/ssh"
 )
-
-type SSHInfo struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	OSType   string
-}
 
 type Host struct {
 	Id            string `json:"id" gorm:"column:id;primaryKey"`              // 主机ID
@@ -40,56 +33,47 @@ func (Host) TableName() string {
 }
 
 type probeHelper struct {
+	sshInfo   types.SSHInfo
 	sshClient *ssh.Client
 	host      *Host
 }
 
-func Register(ctx context.Context, info SSHInfo) error {
-	var per probeHelper
+func Register(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
-	err := per.probe(ctx, info)
+	var info types.SSHInfo
+	err := json.NewDecoder(r.Body).Decode(&info)
 	if err != nil {
-		return err
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error": "invalid request body"}`))
+		return
 	}
 
-	result := mysql.GetClient().Client.WithContext(ctx).Create(per.host)
+	var pHelper probeHelper
+
+	pHelper.sshInfo = info
+	ctx := context.Background()
+
+	err = pHelper.probe(ctx, info)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf(`{"failed to register new host,error": "%s"}`, err)))
+		return
+	}
+
+	result := mysql.GetMysqlClient().Client.WithContext(ctx).Create(pHelper.host)
 	if result.Error != nil {
-		return result.Error
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf(`{"failed to insert into db,error": "%s"}`, result.Error)))
+		return
 	}
 
-	return nil
-}
-
-func (ph *probeHelper) probe(ctx context.Context, info SSHInfo) error {
-	portStr := fmt.Sprintf("%d", info.Port)
-
-	addr := net.JoinHostPort(info.Host, portStr)
-
-	config := &ssh.ClientConfig{
-		User: info.User,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(info.Password),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         5 * time.Second,
-	}
-
-	client, err := ssh.Dial("tcp", addr, config)
+	err = pHelper.createPod(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to dial: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf(`{"failed to create pod,error": "%s"}`, err)))
+		return
 	}
-	ph.sshClient = client
-	ph.host = &Host{}
 
-	switch info.OSType {
-	case "darwin":
-		err := ph.probeDarwin(ctx)
-		if err != nil {
-			return err
-		}
-		ph.host.IPAddr = info.Host
-	}
-	uuid := uuid.New().String()
-	ph.host.Id = uuid
-	return nil
+	w.WriteHeader(http.StatusOK)
 }

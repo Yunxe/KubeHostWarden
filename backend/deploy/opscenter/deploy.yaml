@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opscenter
+  labels:
+    app: opscenter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opscenter
+  template:
+    metadata:
+      labels:
+        app: opscenter
+    spec:
+      containers:
+        - name: opscenter
+          image: opscenter:nightly
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MYSQL_USER
+              value: "root"
+            - name: MYSQL_PASSWORD
+              value: "mysql123"
+            - name: MYSQL_ADDRESS
+              value: "192.168.0.103"
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_DATABASE
+              value: "kubehostwarden"
+            - name: HOST_COLLECTOR_IMAGE
+              value: "host:nightly"

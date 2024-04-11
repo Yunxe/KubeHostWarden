@@ -1,4 +1,4 @@
-package mysql
+package db
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ type MysqlClient struct {
 	Client *gorm.DB
 }
 
-func GetClient() *MysqlClient {
+func GetMysqlClient() *MysqlClient {
 	return mc
 }
 

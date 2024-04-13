@@ -103,7 +103,7 @@ func (c *Collector) DoCollectMemoryDarwin() *Memory {
 		return nil
 	}
 
-	reMemory := regexp.MustCompile(`PhysMem: (\d+M) used \((\d+M) wired, (\d+M) compressor\), (\d+M) unused`)
+	reMemory := regexp.MustCompile(`PhysMem: (.*)M used \((.*)M wired, (.*)M compressor\), (.*)M unused`)
 	matches := reMemory.FindStringSubmatch(string(output))
 
 	if len(matches) != 5 { 
@@ -114,22 +114,18 @@ func (c *Collector) DoCollectMemoryDarwin() *Memory {
 	used, err := strconv.ParseFloat(matches[1], 64)
 	if err != nil {
 		fmt.Printf("Failed to parse used memory: %s\n", err)
-		return nil
 	}
 	wired, err := strconv.ParseFloat(matches[2], 64)
 	if err != nil {
 		fmt.Printf("Failed to parse wired memory: %s\n", err)
-		return nil
 	}
 	unused, err := strconv.ParseFloat(matches[3], 64)
 	if err != nil {
 		fmt.Printf("Failed to parse unused memory: %s\n", err)
-		return nil
 	}
 	compressed, err := strconv.ParseFloat(matches[4], 64)
 	if err != nil {
 		fmt.Printf("Failed to parse compressed memory: %s\n", err)
-		return nil
 	}
 
 	return &Memory{

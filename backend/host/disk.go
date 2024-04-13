@@ -2,8 +2,8 @@ package host
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -78,6 +78,7 @@ func (c *Collector) DoCollectDisk() {
 					time.Now(),
 				)
 				c.writeApi.WritePoint(p)
+				fmt.Printf("write disk data: %v\n", disk)
 			}
 		}
 	}()
@@ -91,36 +92,18 @@ func (c *Collector) DoCollectDiskDarwin() *Disk {
 	}
 	defer session.Close()
 
-	output, err := session.CombinedOutput("iostat -d disk0")
+	output, err := session.CombinedOutput("iostat -d -w 1 -c 2 | tail -n 1")
 	if err != nil {
 		fmt.Println("Failed to execute command: ", err)
 		return nil
 	}
 
-	reDisk := regexp.MustCompile(`disk0\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)`)
-	matches := reDisk.FindStringSubmatch(string(output))
-	if len(matches) != 4 {
-		fmt.Println("Failed to parse disk info")
-		return nil
-	}
+	rawData := strings.TrimSpace(string(output))
+	matches := strings.Fields(rawData)
 
-	tps, err := strconv.ParseFloat(matches[1], 64)
-	if err != nil {
-		fmt.Println("Failed to parse tps: ", err)
-		return nil
-	}
-
-	KBPerTrans, err := strconv.ParseFloat(matches[2], 64)
-	if err != nil {
-		fmt.Println("Failed to parse KBPerTrans: ", err)
-		return nil
-	}
-
-	MBPerSec, err := strconv.ParseFloat(matches[3], 64)
-	if err != nil {
-		fmt.Println("Failed to parse MBPerSec: ", err)
-		return nil
-	}
+	tps,_:= strconv.ParseFloat(matches[0], 64)
+	KBPerTrans,_:= strconv.ParseFloat(matches[1], 64)
+	MBPerSec,_:= strconv.ParseFloat(matches[2], 64)
 
 	disk := &Disk{
 		HostId:     c.hostId,

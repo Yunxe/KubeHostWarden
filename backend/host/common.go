@@ -16,14 +16,16 @@ import (
 type Collector struct {
 	hostId     string
 	metricType string
+	os         string //darwin, linux
+	
 	client     *ssh.Client
 	writeApi   api.WriteAPI
-	os         string //darwin, linux
 	frequency  time.Duration
 
 	cpuDataCh    chan *CPU
 	memoryDataCh chan *Memory
 	diskDataCh   chan *Disk
+	loadDataCh   chan *Load
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -42,6 +44,9 @@ func NewHostCollectors(ctx context.Context) map[string]*Collector {
 	}
 	collectorMap["Disk"] = &Collector{
 		diskDataCh: make(chan *Disk, 5),
+	}
+	collectorMap["Load"] = &Collector{
+		loadDataCh: make(chan *Load, 5),
 	}
 	// collectorMap["Network"] = &Collector{}
 
@@ -82,6 +87,10 @@ func (c *Collector) DoCollect() {
 		c.DoCollectCPU()
 	case "Memory":
 		c.DoCollectMemory()
+	case "Disk":
+		c.DoCollectDisk()
+	case "Load":
+		c.DoCollectLoad()
 	}
 }
 

@@ -83,7 +83,7 @@ func (c *Collector) DoCollectCPU() {
 					cpuData.CreatedAt,
 				)
 				c.writeApi.WritePoint(p)
-				fmt.Println(cpuData)
+				fmt.Printf("write cpu data: %v\n", p)
 			}
 		}
 	}()
@@ -100,7 +100,7 @@ func (c *Collector) DoCollectCPUDarwin() *CPU {
 	// run command
 	var b bytes.Buffer
 	session.Stdout = &b
-	if err := session.Run("top -l 1 | grep 'CPU usage'"); err != nil {
+	if err := session.Run("top -l 1 -s 0 | head -n 4 | grep 'CPU usage'"); err != nil {
 		fmt.Println("Failed to run: ", err)
 		return nil
 	}
@@ -122,6 +122,7 @@ func (c *Collector) DoCollectCPUDarwin() *CPU {
 
 	if reCPU != nil {
 		cpu := &CPU{
+			HostId:    c.hostId,
 			Idle:      idle,
 			System:    system,
 			User:      user,

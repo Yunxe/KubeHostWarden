@@ -14,6 +14,7 @@ import (
 )
 
 type Collector struct {
+	hostId     string
 	metricType string
 	client     *ssh.Client
 	writeApi   api.WriteAPI
@@ -22,6 +23,7 @@ type Collector struct {
 
 	cpuDataCh    chan *CPU
 	memoryDataCh chan *Memory
+	diskDataCh   chan *Disk
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -38,17 +40,18 @@ func NewHostCollectors(ctx context.Context) map[string]*Collector {
 	collectorMap["Memory"] = &Collector{
 		memoryDataCh: make(chan *Memory, 5),
 	}
-	// collectorMap["Disk"] = &Collector{}
+	collectorMap["Disk"] = &Collector{
+		diskDataCh: make(chan *Disk, 5),
+	}
 	// collectorMap["Network"] = &Collector{}
 
 	for mt, collector := range collectorMap {
 		// init context
 		collector.ctx, collector.cancel = context.WithCancel(ctx)
 
-		// set metric type
+		// set metric type,host id, os
 		collector.metricType = mt
-
-		// set os type
+		collector.hostId = os.Getenv("HOST_ID")
 		collector.os = os.Getenv("OSTYPE")
 
 		// establish ssh connection
@@ -77,8 +80,8 @@ func (c *Collector) DoCollect() {
 	switch c.metricType {
 	case "CPU":
 		c.DoCollectCPU()
-	// case "Memory":
-	// 	c.DoCollectMemory()
+	case "Memory":
+		c.DoCollectMemory()
 	}
 }
 

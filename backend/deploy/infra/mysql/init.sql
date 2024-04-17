@@ -17,3 +17,28 @@ CREATE TABLE `kubehostwarden`.`host` (
     `updated_at` TIMESTAMP,
     PRIMARY KEY (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `kubehostwarden`.`user`;
+
+CREATE TABLE `kubehostwarden`.`user` (
+    `id` VARCHAR(255),
+    `username` VARCHAR(64),
+    `password` VARCHAR(64),
+    `email` VARCHAR(64),
+    `created_at` TIMESTAMP,
+    `updated_at` TIMESTAMP,
+    PRIMARY KEY (`id`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `kubehostwarden`.`alarm_info`;
+
+CREATE TABLE `kubehostwarden`.`alarm_info` (
+    `id` VARCHAR(255),
+    `user_id` VARCHAR(255),
+    `host_id` VARCHAR(255),
+    `alarm_type` VARCHAR(64),
+    `alarm_value` VARCHAR(64),
+    `created_at` TIMESTAMP,
+    `updated_at` TIMESTAMP,
+    PRIMARY KEY (`id`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

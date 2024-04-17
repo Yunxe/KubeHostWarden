@@ -36,3 +36,11 @@ spec:
               value: "kubehostwarden"
             - name: HOST_COLLECTOR_IMAGE
               value: "host:nightly"
+            - name: INFLUXDB_BUCKET
+              value: "kubehostwarden"
+            - name: INFLUXDB_ORG
+              value: "myorg"
+            - name: INFLUXDB_URL
+              value: "http://192.168.0.103:8086"
+            - name: INFLUXDB_TOKEN
+              value: "aBtrkWRZwa8t_JDtHlEvX6r83DuVpxQhsy6KyxtA9gKiAWgXK42zNP9s9HTj3ty0pV4JeDndOKH5fsoKP6Kktg=="

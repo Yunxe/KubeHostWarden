@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+    <script type="text/javascript">
+        var ws;
+
+        function connect() {
+            // 创建一个WebSocket连接
+            ws = new WebSocket("ws://localhost:8081/retrieve");
+
+            // 当WebSocket创建成功时
+            ws.onopen = function() {
+                console.log("Connected to the WebSocket server.");
+            };
+
+            // 接收到服务器发送的消息时
+            ws.onmessage = function(evt) {
+                console.log("Received data: " + evt.data);
+                // 你可以在这里处理数据，例如更新UI
+            };
+
+            // 当WebSocket连接关闭时
+            ws.onclose = function() {
+                console.log("Connection closed.");
+            };
+
+            // 当WebSocket连接出错时
+            ws.onerror = function(err) {
+                console.error("WebSocket Error: " + err);
+            };
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();  // 关闭WebSocket连接
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>WebSocket Client</h1>
+    <button onclick="connect()">Connect</button>
+    <button onclick="disconnect()">Disconnect</button>
+</body>
+</html>

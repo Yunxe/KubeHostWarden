@@ -1,7 +1,11 @@
-package probe
+package opscenter
 
 import (
 	"fmt"
+	"kubehostwarden/opscenter/alarm"
+	"kubehostwarden/opscenter/probe"
+	"kubehostwarden/opscenter/reporter"
+	"kubehostwarden/opscenter/user"
 	"kubehostwarden/utils/middleware"
 	"log"
 	"net/http"
@@ -13,15 +17,22 @@ func NewServer() {
 	httpMux := http.NewServeMux()
 
 	httpMux.HandleFunc("/health", health)
-	httpMux.HandleFunc("/register",Register)
+	httpMux.HandleFunc("/probe/register", probe.Register)
+
+	httpMux.HandleFunc("/reporter/retrieve", reporter.Retrieve)
+
+	httpMux.HandleFunc("/user/register", user.Register)
+	httpMux.HandleFunc("/user/login", user.Login)
+
+	httpMux.HandleFunc("/alarm/set", alarm.SetAlarm)
 
 	httpServer.Handler = middleware.Cors(httpMux)
 	httpServer.Addr = ":8080"
 
-	fmt.Printf("Starting Probe Http Server on port %s\n", httpServer.Addr)
+	fmt.Printf("Starting Http Server on port %s\n", httpServer.Addr)
 	err := httpServer.ListenAndServe()
 	if err != nil {
-		log.Fatalf("failed to start probe http server: %v", err)
+		log.Fatalf("failed to start http server: %v", err)
 	}
 }
 

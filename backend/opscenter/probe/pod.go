@@ -70,6 +70,22 @@ func (ph *probeHelper) createPod(ctx context.Context) error {
 							Name:  "HOST_ID",
 							Value: ph.host.Id,
 						},
+						{
+							Name: "INFLUXDB_TOKEN",
+							Value: os.Getenv("INFLUXDB_TOKEN"),
+						},
+						{
+							Name: "INFLUXDB_URL",
+							Value: os.Getenv("INFLUXDB_URL"),
+						},
+						{
+							Name: "INFLUXDB_ORG",
+							Value: os.Getenv("INFLUXDB_ORG"),
+						},
+						{
+							Name: "INFLUXDB_BUCKET",
+							Value: os.Getenv("INFLUXDB_BUCKET"),
+						},
 					},
 				},
 			},

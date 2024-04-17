@@ -3,8 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"kubehostwarden/db"
 	mysql "kubehostwarden/db"
-	"kubehostwarden/opscenter/probe"
+	"kubehostwarden/opscenter"
 
 	"github.com/joho/godotenv"
 )
@@ -27,5 +28,12 @@ func main() {
 		panic("failed to setup mysql")
 	}
 
-	probe.NewServer()
+	err := db.SetupInfluxDB()
+	if err != nil {
+		panic(err)
+	}
+
+	go func() { opscenter.NewServer() }()
+
+	select {}
 }

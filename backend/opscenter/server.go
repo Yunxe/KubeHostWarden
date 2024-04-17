@@ -7,6 +7,7 @@ import (
 	"kubehostwarden/opscenter/reporter"
 	"kubehostwarden/opscenter/user"
 	"kubehostwarden/utils/middleware"
+	"kubehostwarden/utils/responsor"
 	"log"
 	"net/http"
 )
@@ -21,7 +22,7 @@ func NewServer() {
 
 	httpMux.HandleFunc("/reporter/retrieve", reporter.Retrieve)
 
-	httpMux.HandleFunc("/user/register", user.Register)
+	httpMux.HandleFunc("/user/register", responsor.HandlePost(user.Register))
 	httpMux.HandleFunc("/user/login", user.Login)
 
 	httpMux.HandleFunc("/alarm/set", alarm.SetAlarm)

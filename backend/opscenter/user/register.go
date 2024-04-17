@@ -1,45 +1,37 @@
 package user
 
 import (
-	"encoding/json"
+	"context"
 	"kubehostwarden/db"
+	resp "kubehostwarden/utils/responsor"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-type registerInfo struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
+type registerReq struct {
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
 }
 
-func Register(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	var regInfo registerInfo
-	err := json.NewDecoder(r.Body).Decode(&regInfo)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "invalid request body"})
-		return
-	}
-
+func Register(ctx context.Context, regInfo registerReq) resp.Responsor {
 	// Check if the email already exists
 	var existingUser User
-	db.GetMysqlClient().Client.WithContext(r.Context()).Where("email = ?", regInfo.Email).First(&existingUser)
+	db.GetMysqlClient().Client.WithContext(ctx).Where("email = ?", regInfo.Email).First(&existingUser)
 	if existingUser.Email != "" {
-		w.WriteHeader(http.StatusConflict) // 409 Conflict
-		json.NewEncoder(w).Encode(map[string]string{"error": "email already registered"})
-		return
+		return resp.Responsor{
+			Code:    http.StatusConflict,
+			Message: "email already exists",
+		}
 	}
 
 	user := &User{
-		Id:       uuid.NewString()[:8],
-		Username: regInfo.Username,
-		Password: regInfo.Password,
-		Email:    regInfo.Email,
+		Id:        uuid.NewString()[:8],
+		Username:  regInfo.Username,
+		Password:  regInfo.Password,
+		Email:     regInfo.Email,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -47,5 +39,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	// Save the new user
 	db.GetMysqlClient().Client.Save(&user)
 
-	json.NewEncoder(w).Encode(map[string]string{"message": "successfully registered"})
+	return resp.Responsor{
+		Code:    http.StatusOK,
+		Message: "user registered successfully",
+		Result:  user,
+	}
 }

@@ -133,9 +133,12 @@ func (ph *probeHelper) probeLinux(ctx context.Context)error{
 	session.Stdout = &b
 	if err := session.Run(`
 	lsb_release -a;\
+	echo "kernel: $(uname -s)";\
+	echo "kernel version: $(uname -r)";\
+	echo "hostname: $(hostname)";\
 	echo "arch: $(uname -m)";\
-	free -h | grep Mem | awk '{print $2}';\
-	df -h | awk 'NR>1 {print $2}' | grep -E '^[0-9\.]+[GM]$' | sort -h | tail -1`);
+	echo "Mem: $(free -h | grep Mem | awk '{print $2}')";\
+	echo "disk: $(df -h | awk 'NR>1 {print $2}' | grep -E '^[0-9\.]+[GM]$' | sort -h | tail -1)"`);
 	err != nil {
 		return fmt.Errorf("failed to run: %s", err)
 	}
@@ -143,49 +146,49 @@ func (ph *probeHelper) probeLinux(ctx context.Context)error{
 
 	// regular expression
 	reDistributorID := regexp.MustCompile(`Distributor ID:\s+(.*)`)
-	reDescription := regexp.MustCompile(`Description:\s+(.*)`)
 	reRelease := regexp.MustCompile(`Release:\s+(.*)`)
+	reKernel:= regexp.MustCompile(`kernel: (.*)`)
+	reKernelVersion := regexp.MustCompile(`kernel version: (.*)`)
+	reHostname := regexp.MustCompile(`hostname: (.*)`)
 	reArch := regexp.MustCompile(`arch: (.*)`)
 	reMemSize := regexp.MustCompile(`Mem:\s+(.*)`)
-	reDiskSize := regexp.MustCompile(`(.*)(G|T)B`)
+	reDiskSize := regexp.MustCompile(`disk:\s+(.*)`)
 
 	// match
 	distributorIDMatch := reDistributorID.FindStringSubmatch(output)
-	descriptionMatch := reDescription.FindStringSubmatch(output)
 	releaseMatch := reRelease.FindStringSubmatch(output)
+	kernelMatch := reKernel.FindStringSubmatch(output)
+	kernelVersionMatch := reKernelVersion.FindStringSubmatch(output)
+	hostnameMatch := reHostname.FindStringSubmatch(output)
 	archMatch := reArch.FindStringSubmatch(output)
 	memSizeMatch := reMemSize.FindStringSubmatch(output)
 	diskSizeMatch := reDiskSize.FindStringSubmatch(output)
 
-	// print all matches 
-	fmt.Printf("distributorIDMatch: %v\n", distributorIDMatch)
-	fmt.Printf("descriptionMatch: %v\n", descriptionMatch)
-	fmt.Printf("releaseMatch: %v\n", releaseMatch)
-	fmt.Printf("archMatch: %v\n", archMatch)
-	fmt.Printf("memSizeMatch: %v\n", memSizeMatch)
-	fmt.Printf("diskSizeMatch: %v\n", diskSizeMatch)
+	if distributorIDMatch != nil {
+		ph.host.OS = distributorIDMatch[1]
+	}
+	if releaseMatch != nil {
+		ph.host.OSVersion = releaseMatch[1]
+	}
+	if kernelMatch != nil {
+		ph.host.Kernel = kernelMatch[1]
+	}
+	if kernelVersionMatch != nil {
+		ph.host.KernelVersion = kernelVersionMatch[1]
+	}
+	if hostnameMatch != nil {
+		ph.host.Hostname = hostnameMatch[1]
+	}
+	if archMatch != nil {
+		ph.host.Arch = archMatch[1]
+	}
+	if memSizeMatch != nil {
+		ph.host.MemoryTotal = memSizeMatch[1]
+	}
+	if diskSizeMatch != nil {
+		ph.host.DiskTotal = diskSizeMatch[1]
+	}
 
-
-
-	// if distributorIDMatch != nil {
-	// 	ph.host.OS = distributorIDMatch[1]
-	// }
-	// if descriptionMatch != nil {
-	// 	ph.host.OSVersion = descriptionMatch[1]
-	// }
-	// if releaseMatch != nil {
-	// 	ph.host.KernelVersion = releaseMatch[1]
-	// }
-	// if archMatch != nil {
-	// 	ph.host.Arch = archMatch[1]
-	// }
-	// if memSizeMatch != nil {
-	// 	ph.host.MemoryTotal = memSizeMatch[1]
-	// }
-	// if diskSizeMatch != nil {
-	// 	ph.host.DiskTotal = diskSizeMatch[1]
-	// }
-
-	// fmt.Println(host)
+	// fmt.Println(ph.host)
 	return nil
 }

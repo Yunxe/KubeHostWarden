@@ -1,8 +1,13 @@
-default: run
+backend := $(shell pwd)/backend
 
-run:
-	go run backend/cmd/opscenter/opscenter.go
+.PHONY: ops dev
+ops dev:
+	cd $(backend) && \
+	go build -o build/opscenter cmd/opscenter/opscenter.go && \
+	./build/opscenter -env ./.env -e "dev"
 
-.PHONY: host
-host:
-	go run backend/cmd/host/host.go
+.PHONY: ops
+ops:
+	cd $(backend) && \
+	go build -o build/opscenter cmd/opscenter/opscenter.go && \
+	./build/opscenter -env ./.env

@@ -1,62 +1,71 @@
 package user
 
 import (
-	"encoding/json"
+	"context"
+	"fmt"
 	"kubehostwarden/db"
+	resp "kubehostwarden/utils/responsor"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 )
 
-type loginInfo struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+type LoginReq struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
 }
 
-type loginResponse struct {
+type LoginResp struct {
 	Token string `json:"token"`
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	var loginInfo loginInfo
-	err := json.NewDecoder(r.Body).Decode(&loginInfo)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "invalid request body"})
-		return
-	}
-
+func Login(ctx context.Context, loginReq LoginReq) resp.Responsor {
 	var existedUser *User
-	db.GetMysqlClient().Client.WithContext(r.Context()).Where("email = ?", loginInfo.Email).First(&existedUser)
+	if result := db.GetMysqlClient().Client.WithContext(ctx).Where("email = ?", loginReq.Email).First(&existedUser); result.Error != nil {
+		return resp.Responsor{
+			Code:    http.StatusInternalServerError,
+			Message: fmt.Sprintf("failed to query user: %v", result.Error),
+		}
+	}
 
 	if existedUser == nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "this email has not been registered!"})
-		return
+		return resp.Responsor{
+			Code:    http.StatusNotFound,
+			Message: "user not found",
+		}
 	}
 
-	if existedUser.Password != loginInfo.Password {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "wrong password!"})
-		return
+	if existedUser.Password != loginReq.Password {
+		return resp.Responsor{
+			Code:    http.StatusUnauthorized,
+			Message: "wrong password",
+		}
 	}
 
 	// Create a new token object, specifying signing method and the claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email": loginInfo.Email,
+		"id":    existedUser.Id,
+		"email": loginReq.Email,
 		"exp":   time.Now().Add(time.Hour * 72).Unix(),
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := token.SignedString([]byte("your_secret_key")) // Replace "your_secret_key" with your secret key
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "failed to generate token"})
-		return
+		// Handle the error here
+		return resp.Responsor{
+			Code:    http.StatusInternalServerError,
+			Message: fmt.Sprintf("failed to sign token: %v", err),
+		}
 	}
 
-	json.NewEncoder(w).Encode(loginResponse{Token: tokenString})
+	return resp.Responsor{
+		Code:    http.StatusOK,
+		Message: "login successfully",
+		Result: LoginResp{
+			Token: tokenString,
+		},
+	}
 }

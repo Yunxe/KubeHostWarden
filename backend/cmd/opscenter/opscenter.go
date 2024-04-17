@@ -4,17 +4,26 @@ import (
 	"flag"
 	"fmt"
 	"kubehostwarden/db"
-	mysql "kubehostwarden/db"
 	"kubehostwarden/opscenter"
+	"os"
 
 	"github.com/joho/godotenv"
 )
 
 func main() {
+	// 定义命令行参数
 	var envFilePath string
+	var env string
 	flag.StringVar(&envFilePath, "env", "", "Path to .env file")
+	flag.StringVar(&env, "e", "dev", "Environment: dev, prod, etc.") // 添加 -e 用于指定环境
+
+	// 解析命令行参数
 	flag.Parse()
 
+	// 设置环境变量 ENV
+	os.Setenv("ENV", env)
+
+	// 加载环境变量文件
 	if envFilePath != "" {
 		err := godotenv.Load(envFilePath)
 		if err != nil {
@@ -24,16 +33,19 @@ func main() {
 		}
 	}
 
-	if err := mysql.SetupMysql(); err != nil {
+	// 设置MySQL数据库
+	if err := db.SetupMysql(); err != nil {
 		panic("failed to setup mysql")
 	}
 
-	err := db.SetupInfluxDB()
-	if err != nil {
+	// 设置InfluxDB
+	if err := db.SetupInfluxDB(); err != nil {
 		panic(err)
 	}
 
-	go func() { opscenter.NewServer() }()
+	// 启动opscenter服务器
+	go opscenter.NewServer()
 
+	// 阻止主goroutine退出
 	select {}
 }

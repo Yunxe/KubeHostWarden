@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"kubehostwarden/db"
 	resp "kubehostwarden/utils/responsor"
 	"net/http"
@@ -37,7 +38,13 @@ func Register(ctx context.Context, regInfo registerReq) resp.Responsor {
 	}
 
 	// Save the new user
-	db.GetMysqlClient().Client.Save(&user)
+	res := db.GetMysqlClient().Client.Save(&user)
+	if res.Error != nil {
+		return resp.Responsor{
+			Code:    http.StatusInternalServerError,
+			Message: fmt.Sprintf("failed to save user: %v", res.Error),
+		}
+	}
 
 	return resp.Responsor{
 		Code:    http.StatusOK,

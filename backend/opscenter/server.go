@@ -2,32 +2,47 @@ package opscenter
 
 import (
 	"fmt"
-	"kubehostwarden/opscenter/alarm"
 	"kubehostwarden/opscenter/probe"
-	"kubehostwarden/opscenter/reporter"
 	"kubehostwarden/opscenter/user"
 	"kubehostwarden/utils/middleware"
 	"kubehostwarden/utils/responsor"
 	"log"
 	"net/http"
+	"os"
 )
 
 func NewServer() {
+	currentEnv := os.Getenv("ENV")
+	fmt.Printf("Current ENV: %s\n", currentEnv)
+
 	var httpServer http.Server
+	mainMux := http.NewServeMux()
+	authMux := http.NewServeMux()
 
-	httpMux := http.NewServeMux()
+	var authHandler http.Handler
 
-	httpMux.HandleFunc("/health", health)
-	httpMux.HandleFunc("/probe/register", probe.Register)
+	authMux.HandleFunc("/probe/register", responsor.HandlePost(probe.Register))
 
-	httpMux.HandleFunc("/reporter/retrieve", reporter.Retrieve)
+	if currentEnv == "dev" {
+		authHandler = authMux
+	} else {
+		authHandler = middleware.Auth(authMux)
+	}
 
-	httpMux.HandleFunc("/user/register", responsor.HandlePost(user.Register))
-	httpMux.HandleFunc("/user/login", user.Login)
+	// httpNoAuthMux.HandleFunc("/health", health)
+	// httpNoAuthMux.HandleFunc("/probe/register", probe.Register)
 
-	httpMux.HandleFunc("/alarm/set", alarm.SetAlarm)
+	// httpNoAuthMux.HandleFunc("/reporter/retrieve", reporter.Retrieve)
 
-	httpServer.Handler = middleware.Cors(httpMux)
+	mainMux.HandleFunc("/user/register", responsor.HandlePost(user.Register))
+	mainMux.HandleFunc("/user/login", responsor.HandlePost(user.Login))
+	mainMux.HandleFunc("/health", health)
+
+	// httpNoAuthMux.HandleFunc("/alarm/set", alarm.SetAlarm)
+
+	mainMux.Handle("/", authHandler)
+
+	httpServer.Handler = middleware.Cors(mainMux)
 	httpServer.Addr = ":8080"
 
 	fmt.Printf("Starting Http Server on port %s\n", httpServer.Addr)

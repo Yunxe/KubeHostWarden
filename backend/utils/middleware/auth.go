@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
+	"kubehostwarden/utils/constant"
 	"net/http"
 	"os"
 	"strings"
@@ -20,22 +22,22 @@ func Auth(next http.Handler) http.Handler {
 			return
 		}
 
-		// validate the token
-		id, email, err := validateToken(token); 
+		id, email, err := validateToken(token)
 		if err != nil {
 			// if the token is invalid, return 401 Unauthorized
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
-		w.Header().Set("X-User-Id", id)
-		w.Header().Set("X-User-Email", email)
+		ctx := context.WithValue(r.Context(), constant.UserIDKey, id)
+		ctx = context.WithValue(ctx, constant.UserEmailKey, email)
+
+		r = r.WithContext(ctx)
 		// if the token is valid, call the next handler
 		next.ServeHTTP(w, r)
 	})
 }
 
-// validateToken is a dummy function to validate the token
 func validateToken(tokenString string) (string, string, error) {
 	// Check if the token has the "Bearer " prefix
 	if !strings.HasPrefix(tokenString, "Bearer ") {

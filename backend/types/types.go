@@ -22,10 +22,27 @@ type Host struct {
 	MemoryTotal   string `json:"memory_total" gorm:"column:memory_total"`     // 内存总量，保持统一的单位
 	DiskTotal     string `json:"disk_total" gorm:"column:disk_total"`         // 磁盘总量，保持统一的单位
 
+	OwnerId string `json:"owner_id" gorm:"column:owner_id"` // 主机的拥有者ID
+	Owner   string `json:"owner" gorm:"column:owner"`       // 主机的拥有者
+
 	CreatedAt time.Time `json:"created_at" gorm:"column:created_at"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"column:updated_at"`
 }
 
 func (Host) TableName() string {
 	return "host"
+}
+
+type User struct {
+	Id       string `json:"id" gorm:"column:id;primaryKey"`
+	Username string `json:"username" gorm:"column:username"`
+	Password string `json:"password" gorm:"column:password"`
+	Email    string `json:"email" gorm:"column:email"`
+
+	CreatedAt time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"column:updated_at"`
+}
+
+func (User) TableName() string {
+	return "user"
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"kubehostwarden/db"
+	"kubehostwarden/types"
 	resp "kubehostwarden/utils/responsor"
 	"net/http"
 	"os"
@@ -22,7 +23,7 @@ type LoginResp struct {
 }
 
 func Login(ctx context.Context, loginReq LoginReq) resp.Responsor {
-	var existedUser *User
+	var existedUser *types.User
 	if result := db.GetMysqlClient().Client.WithContext(ctx).Where("email = ?", loginReq.Email).First(&existedUser); result.Error != nil {
 		return resp.Responsor{
 			Code:    http.StatusInternalServerError,

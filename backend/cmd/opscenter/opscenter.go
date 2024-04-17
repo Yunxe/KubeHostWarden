@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"kubehostwarden/db"
 	"kubehostwarden/opscenter"
-	"os"
 
 	"github.com/joho/godotenv"
 )
@@ -13,15 +12,10 @@ import (
 func main() {
 	// 定义命令行参数
 	var envFilePath string
-	var env string
 	flag.StringVar(&envFilePath, "env", "", "Path to .env file")
-	flag.StringVar(&env, "e", "dev", "Environment: dev, prod, etc.") // 添加 -e 用于指定环境
 
 	// 解析命令行参数
 	flag.Parse()
-
-	// 设置环境变量 ENV
-	os.Setenv("ENV", env)
 
 	// 加载环境变量文件
 	if envFilePath != "" {

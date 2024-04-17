@@ -13,6 +13,8 @@ CREATE TABLE `kubehostwarden`.`host` (
     `ip_addr` VARCHAR(64),
     `memory_total` VARCHAR(64),
     `disk_total` VARCHAR(64),
+    `owner_id` VARCHAR(255),
+    `owner` VARCHAR(64),
     `created_at` TIMESTAMP,
     `updated_at` TIMESTAMP,
     PRIMARY KEY (`id`)

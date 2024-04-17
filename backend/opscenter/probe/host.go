@@ -5,6 +5,7 @@ import (
 	"fmt"
 	mysql "kubehostwarden/db"
 	"kubehostwarden/types"
+	"kubehostwarden/utils/constant"
 	resp "kubehostwarden/utils/responsor"
 	"net/http"
 
@@ -30,7 +31,20 @@ func Register(ctx context.Context, sshInfo types.SSHInfo) resp.Responsor {
 		}
 	}
 
-	result := mysql.GetMysqlClient().Client.WithContext(ctx).Create(pHelper.host)
+	var owner types.User
+	ownerId := ctx.Value(constant.UserIDKey).(string)
+	result := mysql.GetMysqlClient().Client.WithContext(ctx).Where("id = ?", ownerId).First(&owner)
+	if result.Error != nil {
+		return resp.Responsor{
+			Code:    http.StatusInternalServerError,
+			Message: fmt.Sprintf("failed to query host owner: %v", result.Error),
+		}
+	}
+
+	pHelper.host.OwnerId = owner.Id
+	pHelper.host.Owner = owner.Username
+
+	result = mysql.GetMysqlClient().Client.WithContext(ctx).Create(pHelper.host)
 	if result.Error != nil {
 		return resp.Responsor{
 			Code:    http.StatusInternalServerError,

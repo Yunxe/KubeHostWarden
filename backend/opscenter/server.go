@@ -8,26 +8,16 @@ import (
 	"kubehostwarden/utils/responsor"
 	"log"
 	"net/http"
-	"os"
 )
 
 func NewServer() {
-	currentEnv := os.Getenv("ENV")
-	fmt.Printf("Current ENV: %s\n", currentEnv)
-
 	var httpServer http.Server
 	mainMux := http.NewServeMux()
 	authMux := http.NewServeMux()
 
-	var authHandler http.Handler
-
 	authMux.HandleFunc("/probe/register", responsor.HandlePost(probe.Register))
 
-	if currentEnv == "dev" {
-		authHandler = authMux
-	} else {
-		authHandler = middleware.Auth(authMux)
-	}
+	authHandler := middleware.Auth(authMux)
 
 	// httpNoAuthMux.HandleFunc("/health", health)
 	// httpNoAuthMux.HandleFunc("/probe/register", probe.Register)

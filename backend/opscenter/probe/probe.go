@@ -121,7 +121,7 @@ func (ph *probeHelper) probeDarwin(ctx context.Context) error {
 	return nil
 }
 
-func (ph *probeHelper) probeLinux(ctx context.Context)error{
+func (ph *probeHelper) probeLinux(ctx context.Context) error {
 	session, err := ph.sshClient.NewSession()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %s", err)
@@ -138,8 +138,7 @@ func (ph *probeHelper) probeLinux(ctx context.Context)error{
 	echo "hostname: $(hostname)";\
 	echo "arch: $(uname -m)";\
 	echo "Mem: $(free -h | grep Mem | awk '{print $2}')";\
-	echo "disk: $(df -h | awk 'NR>1 {print $2}' | grep -E '^[0-9\.]+[GM]$' | sort -h | tail -1)"`);
-	err != nil {
+	echo "disk: $(df -h | awk 'NR>1 {print $2}' | grep -E '^[0-9\.]+[GM]$' | sort -h | tail -1)"`); err != nil {
 		return fmt.Errorf("failed to run: %s", err)
 	}
 	output := b.String()
@@ -147,7 +146,7 @@ func (ph *probeHelper) probeLinux(ctx context.Context)error{
 	// regular expression
 	reDistributorID := regexp.MustCompile(`Distributor ID:\s+(.*)`)
 	reRelease := regexp.MustCompile(`Release:\s+(.*)`)
-	reKernel:= regexp.MustCompile(`kernel: (.*)`)
+	reKernel := regexp.MustCompile(`kernel: (.*)`)
 	reKernelVersion := regexp.MustCompile(`kernel version: (.*)`)
 	reHostname := regexp.MustCompile(`hostname: (.*)`)
 	reArch := regexp.MustCompile(`arch: (.*)`)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"kubehostwarden/db"
+	"kubehostwarden/types"
 	resp "kubehostwarden/utils/responsor"
 	"net/http"
 	"time"
@@ -19,7 +20,7 @@ type registerReq struct {
 
 func Register(ctx context.Context, regInfo registerReq) resp.Responsor {
 	// Check if the email already exists
-	var existingUser User
+	var existingUser types.User
 	db.GetMysqlClient().Client.WithContext(ctx).Where("email = ?", regInfo.Email).First(&existingUser)
 	if existingUser.Email != "" {
 		return resp.Responsor{
@@ -28,8 +29,8 @@ func Register(ctx context.Context, regInfo registerReq) resp.Responsor {
 		}
 	}
 
-	user := &User{
-		Id:        uuid.NewString()[:8],
+	user := &types.User{
+		Id:        uuid.NewString(),
 		Username:  regInfo.Username,
 		Password:  regInfo.Password,
 		Email:     regInfo.Email,

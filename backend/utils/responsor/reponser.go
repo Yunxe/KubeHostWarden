@@ -44,7 +44,7 @@ func HandleGet(handler func(context.Context, url.Values) Responsor) http.Handler
 	}
 }
 
-func HandlePost[reqType any](handler func(ctx context.Context, req reqType) Responsor) http.HandlerFunc {
+func HandlePost[reqType any](handlerFunc func(ctx context.Context, req reqType) Responsor) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -71,7 +71,7 @@ func HandlePost[reqType any](handler func(ctx context.Context, req reqType) Resp
 			return
 		}
 
-		resp := handler(r.Context(), *req)
+		resp := handlerFunc(r.Context(), *req)
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			resp := Responsor{
 				Code:    http.StatusInternalServerError,

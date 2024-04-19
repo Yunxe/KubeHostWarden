@@ -1,9 +1,9 @@
 package opscenter
 
 import (
-	"fmt"
 	"kubehostwarden/opscenter/probe"
 	"kubehostwarden/opscenter/user"
+	"kubehostwarden/utils/logger"
 	"kubehostwarden/utils/middleware"
 	"kubehostwarden/utils/responsor"
 	"log"
@@ -35,7 +35,7 @@ func NewServer() {
 	httpServer.Handler = middleware.Cors(mainMux)
 	httpServer.Addr = ":8080"
 
-	fmt.Printf("Starting Http Server on port %s\n", httpServer.Addr)
+	logger.Info("Opscenter server started", "addr", httpServer.Addr)
 	err := httpServer.ListenAndServe()
 	if err != nil {
 		log.Fatalf("failed to start http server: %v", err)

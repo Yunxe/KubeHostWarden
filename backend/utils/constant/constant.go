@@ -7,3 +7,8 @@ const (
 	UserIDKey    ContextKey = "userId"
 	UserEmailKey ContextKey = "userEmail"
 )
+
+const (
+	DARWIN = "darwin"
+	LINUX  = "linux"
+)

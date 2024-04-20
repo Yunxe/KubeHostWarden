@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"kubehostwarden/db"
 	"kubehostwarden/host"
+	"kubehostwarden/utils/logger"
 	"os"
 	"os/signal"
 	"syscall"
@@ -21,9 +21,9 @@ func main() {
 	if envFilePath != "" {
 		err := godotenv.Load(envFilePath)
 		if err != nil {
-			fmt.Printf("Error loading .env file: %v\n", err)
+			logger.Error("Failed to load .env file", "error", err.Error())
 		} else {
-			fmt.Printf("Loaded .env file from %s\n", envFilePath)
+			logger.Info("Loaded .env file", "path", envFilePath)
 		}
 	}
 
@@ -33,24 +33,22 @@ func main() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() 
-	
+	defer cancel()
+
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
-	collectors := host.NewHostCollectors(ctx)
-	for _, collector := range collectors {
-		go collector.DoCollect() 
-	}
+	go host.NewHostService(ctx)
 
 	go func() {
-		<-signals 
-		fmt.Println("Shutting down gracefully...")
-		cancel() 
+		<-signals
+		logger.Info("Shutting down gracefully...")
+		cancel()
 	}()
 
-	<-ctx.Done() 
-	for _, collector := range collectors {
-		collector.Close() 
-	}
+	<-ctx.Done()
+
+	logger.Info("Exiting...")
+	db.GetInfluxClient().Client.Close()
+	db.GetInfluxClient().Client.Close()
 }

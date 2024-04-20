@@ -6,16 +6,14 @@ import (
 	mysql "kubehostwarden/db"
 	"kubehostwarden/types"
 	"kubehostwarden/utils/constant"
+	"kubehostwarden/utils/logger"
 	resp "kubehostwarden/utils/responsor"
 	"net/http"
-
-	"golang.org/x/crypto/ssh"
 )
 
 type probeHelper struct {
-	sshInfo   types.SSHInfo
-	sshClient *ssh.Client
-	host      *types.Host
+	sshInfo types.SSHInfo
+	host    *types.Host
 }
 
 func Register(ctx context.Context, sshInfo types.SSHInfo) resp.Responsor {
@@ -59,6 +57,7 @@ func Register(ctx context.Context, sshInfo types.SSHInfo) resp.Responsor {
 			Message: fmt.Sprintf("failed to create pod: %v", err),
 		}
 	}
+	logger.Info("pod created successfully", "host", pHelper.host.Id)
 
 	return resp.Responsor{
 		Code:    http.StatusOK,

@@ -38,7 +38,7 @@ func (ph *probeHelper) createPod(ctx context.Context) error {
 	// create a pod
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "host-collector-" + ph.host.Id[:6],
+			Name: "host-collector-" + ph.host.Id,
 		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{

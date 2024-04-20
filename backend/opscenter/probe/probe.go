@@ -5,58 +5,44 @@ import (
 	"context"
 	"fmt"
 	"kubehostwarden/types"
-	"net"
+	"kubehostwarden/utils/sshclient"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/ssh"
 )
 
 func (ph *probeHelper) probe(ctx context.Context) error {
-	portStr := fmt.Sprintf("%d", ph.sshInfo.Port)
-
-	addr := net.JoinHostPort(ph.sshInfo.EndPoint, portStr)
-
-	config := &ssh.ClientConfig{
-		User: ph.sshInfo.User,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(ph.sshInfo.Password),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         5 * time.Second,
-	}
-
-	client, err := ssh.Dial("tcp", addr, config)
+	client, err := sshclient.NewSSHClient(ph.sshInfo)
 	if err != nil {
-		return fmt.Errorf("failed to dial: %s", err)
+		return fmt.Errorf("failed to create ssh client: %s", err)
 	}
-	ph.sshClient = client
+
 	ph.host = &types.Host{}
 
 	switch ph.sshInfo.OSType {
 	case "darwin":
-		err := ph.probeDarwin(ctx)
+		err := ph.probeDarwin(ctx, client)
 		if err != nil {
 			return err
 		}
 		ph.host.IPAddr = ph.sshInfo.EndPoint
 
 	case "linux":
-		err := ph.probeLinux(ctx)
+		err := ph.probeLinux(ctx, client)
 		if err != nil {
 			return err
 		}
 		ph.host.IPAddr = ph.sshInfo.EndPoint
 	}
 	uuid := uuid.New().String()
-	ph.host.Id = uuid
+	ph.host.Id = uuid[:8]
 	return nil
 }
 
-func (ph *probeHelper) probeDarwin(ctx context.Context) error {
-	session, err := ph.sshClient.NewSession()
+func (ph *probeHelper) probeDarwin(ctx context.Context, client *ssh.Client) error {
+	session, err := client.NewSession()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %s", err)
 	}
@@ -121,8 +107,8 @@ func (ph *probeHelper) probeDarwin(ctx context.Context) error {
 	return nil
 }
 
-func (ph *probeHelper) probeLinux(ctx context.Context) error {
-	session, err := ph.sshClient.NewSession()
+func (ph *probeHelper) probeLinux(ctx context.Context, client *ssh.Client) error {
+	session, err := client.NewSession()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %s", err)
 	}

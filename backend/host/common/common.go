@@ -20,7 +20,7 @@ type Point struct {
 }
 
 func GetOSType() string {
-	return os.Getenv("OSTYPE")
+	return os.Getenv("SSH_OSTYPE")
 }
 
 var SshClient *ssh.Client
@@ -28,12 +28,12 @@ var once sync.Once
 
 func GetSSHClient() *ssh.Client {
 	once.Do(func() {
-		port, _ := strconv.Atoi(os.Getenv("PORT"))
+		port, _ := strconv.Atoi(os.Getenv("SSH_PORT"))
 		sshInfo := types.SSHInfo{
-			EndPoint: os.Getenv("HOST"),
+			EndPoint: os.Getenv("SSH_HOST"),
 			Port:     port,
-			User:     os.Getenv("USER"),
-			Password: os.Getenv("PASSWORD"),
+			User:     os.Getenv("SSH_USER"),
+			Password: os.Getenv("SSH_PASSWORD"),
 		}
 		client, err := sshclient.NewSSHClient(sshInfo)
 		if err != nil {

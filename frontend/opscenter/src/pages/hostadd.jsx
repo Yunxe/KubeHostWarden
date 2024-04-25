@@ -3,7 +3,7 @@ import axios from "axios";
 import { Form, Input, Button, Select } from "antd";
 import AlertModal from "../components/alertmodal";
 
-export const Hosts = () => {
+export const HostAdd = () => {
   const [form] = Form.useForm();
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");

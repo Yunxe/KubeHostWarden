@@ -28,7 +28,7 @@ export const SiderLayout = () => {
               <Link to="/hosts/add">添加主机</Link>
             </Menu.Item>
             <Menu.Item key="2" icon={<EyeOutlined />}>
-              <Link to="/hosts/view">查看主机</Link>
+              <Link to="/hosts/retrieve">查看主机</Link>
             </Menu.Item>
           </SubMenu>
           <Menu.Item key="3" icon={<NotificationOutlined />}>

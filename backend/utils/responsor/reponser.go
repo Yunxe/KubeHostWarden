@@ -25,6 +25,21 @@ func Decode[T any](r io.Reader) (*T, error) {
 	return &result, nil
 }
 
+func ResponsorEncoder(w http.ResponseWriter, resp Responsor) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		resp := Responsor{
+			Code:    http.StatusInternalServerError,
+			Message: fmt.Sprintf("failed to encode response: %v", err),
+			Result:  nil,
+		}
+		json.NewEncoder(w).Encode(resp)
+		return
+	}
+}
+
 func HandleGet(handler func(context.Context, url.Values) Responsor) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

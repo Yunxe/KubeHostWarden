@@ -1,7 +1,8 @@
 package opscenter
 
 import (
-	"kubehostwarden/opscenter/probe"
+	opsHost "kubehostwarden/opscenter/host"
+	"kubehostwarden/opscenter/reporter"
 	"kubehostwarden/opscenter/user"
 	"kubehostwarden/utils/logger"
 	"kubehostwarden/utils/middleware"
@@ -14,15 +15,16 @@ func NewServer() {
 	var httpServer http.Server
 	mainMux := http.NewServeMux()
 	authMux := http.NewServeMux()
-
-	authMux.HandleFunc("/probe/register", responsor.HandlePost(probe.Register))
+	// host api
+	authMux.HandleFunc("/host/register", responsor.HandlePost(opsHost.Register))
+	authMux.HandleFunc("/host/delete", responsor.HandlePost(opsHost.Delete))
+	authMux.HandleFunc("/host/retrieve", responsor.HandleGet(opsHost.Retrieve))
+	// user api
+	authMux.HandleFunc("/user/retrieve", responsor.HandleGet(user.Retrieve))
+	// reporter api
+	authMux.HandleFunc("/reporter/report", reporter.Report)
 
 	authHandler := middleware.Auth(authMux)
-
-	// httpNoAuthMux.HandleFunc("/health", health)
-	// httpNoAuthMux.HandleFunc("/probe/register", probe.Register)
-
-	// httpNoAuthMux.HandleFunc("/reporter/retrieve", reporter.Retrieve)
 
 	mainMux.HandleFunc("/user/register", responsor.HandlePost(user.Register))
 	mainMux.HandleFunc("/user/login", responsor.HandlePost(user.Login))

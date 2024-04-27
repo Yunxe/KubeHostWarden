@@ -22,7 +22,7 @@ func (mm *MemoryMetric) ToPoint() common.Point {
 	return common.Point{
 		Measurement: "memory",
 		Tags: map[string]string{
-			"host": os.Getenv("HOST"),
+			"hostId": os.Getenv("HOST_ID"),
 		},
 		Fields: map[string]interface{}{
 			"used":       mm.Used,

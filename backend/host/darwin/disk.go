@@ -22,7 +22,7 @@ func (dm *DiskMetric) ToPoint() common.Point {
 	return common.Point{
 		Measurement: "disk",
 		Tags: map[string]string{
-			"hostId": os.Getenv("HOST"),
+			"hostId": os.Getenv("HOST_ID"),
 		},
 		Fields: map[string]interface{}{
 			"tps":        dm.Tps,

@@ -13,7 +13,7 @@ import (
 type Responsor struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
-	Result  interface{} `json:"result"`
+	Result  interface{} `json:"result,omitempty"`
 }
 
 func Decode[T any](r io.Reader) (*T, error) {

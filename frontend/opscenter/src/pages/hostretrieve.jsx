@@ -17,7 +17,7 @@ export const HostRetrieve = () => {
       }
       try {
         const response = await axios.get(
-          "http://localhost:8080/reporter/retrieve",
+          "http://localhost:8080/host/retrieve",
           {
             headers: {
               Authorization: `Bearer ${token}`, // 将token添加到请求头中

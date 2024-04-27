@@ -2,46 +2,46 @@ package reporter
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"kubehostwarden/db"
-	"kubehostwarden/utils/logger"
+	resp "kubehostwarden/utils/responsor"
 	"net/http"
+	"net/url"
 	"os"
 )
 
-func Report(w http.ResponseWriter, r *http.Request) {
-	hostId := r.URL.Query().Get("hostId")
-	if hostId == "" {
-		http.Error(w, "hostId is required", http.StatusBadRequest)
-		return
+func Report(ctx context.Context, values url.Values) resp.Responsor {
+	hostId := values.Get("hostId")
+	metricType := values.Get("mt")
+	if hostId == "" || metricType == "" {
+		return resp.Responsor{
+			Code:    http.StatusBadRequest,
+			Message: "hostId and metricType are required",
+		}
 	}
 
-	data, err := fetchData(hostId)
+	data, err := fetchData(hostId, metricType)
 	if err != nil {
-		logger.Error("failed to fetch data", "error", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
+		return resp.Responsor{
+			Code:    http.StatusInternalServerError,
+			Message: err.Error(),
+		}
 	}
 
-	responseData, err := json.Marshal(data)
-	if err != nil {
-		logger.Error("failed to marshal data", "error", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
+	return resp.Responsor{
+		Code:    http.StatusOK,
+		Message: "data retrieved successfully",
+		Result:  data,
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(responseData)
 }
 
 // fetchData 根据 hostId 从 InfluxDB 中查询数据
-func fetchData(hostId string) ([]map[string]interface{}, error) {
+func fetchData(hostId string, metricType string) ([]map[string]interface{}, error) {
 	queryApi := db.GetInfluxClient().Client.QueryAPI(os.Getenv("INFLUXDB_ORG"))
 	query := fmt.Sprintf(`from(bucket: "%s")
 		|> range(start: -1h)
-		|> filter(fn: (r) => r["hostId"] == "%s")
-		|> limit(n:30)`, os.Getenv("INFLUXDB_BUCKET"), hostId)
+		|> filter(fn: (r) => r["hostId"] == "%s" and r["_measurement"] == "%s")
+		|> limit(n:10)`, os.Getenv("INFLUXDB_BUCKET"), hostId, metricType)
 
 	result, err := queryApi.Query(context.Background(), query)
 	if err != nil {

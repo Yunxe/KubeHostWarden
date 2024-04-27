@@ -22,12 +22,13 @@ func NewServer() {
 	// user api
 	authMux.HandleFunc("/user/retrieve", responsor.HandleGet(user.Retrieve))
 	// reporter api
-	authMux.HandleFunc("/reporter/report", reporter.Report)
-
+	
 	authHandler := middleware.Auth(authMux)
-
+	
 	mainMux.HandleFunc("/user/register", responsor.HandlePost(user.Register))
 	mainMux.HandleFunc("/user/login", responsor.HandlePost(user.Login))
+	
+	mainMux.HandleFunc("/reporter/report", responsor.HandleGet(reporter.Report))
 	mainMux.HandleFunc("/health", health)
 
 	// httpNoAuthMux.HandleFunc("/alarm/set", alarm.SetAlarm)

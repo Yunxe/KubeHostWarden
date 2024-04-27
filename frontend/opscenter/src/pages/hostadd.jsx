@@ -19,7 +19,7 @@ export const HostAdd = () => {
     values.port = parseInt(values.port);
     try {
       const response = await axios.post(
-        "http://localhost:8080/probe/register",
+        "http://localhost:8080/host/register",
         values,
         {
           headers: {

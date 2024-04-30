@@ -1,6 +1,7 @@
 package opscenter
 
 import (
+	"kubehostwarden/opscenter/alarm"
 	opsHost "kubehostwarden/opscenter/host"
 	"kubehostwarden/opscenter/reporter"
 	"kubehostwarden/opscenter/user"
@@ -21,8 +22,11 @@ func NewServer() {
 	authMux.HandleFunc("/host/retrieve", responsor.HandleGet(opsHost.Retrieve))
 	// user api
 	authMux.HandleFunc("/user/retrieve", responsor.HandleGet(user.Retrieve))
-	// reporter api
-	
+	// alarm api
+	authMux.HandleFunc("/alarm/setthreshold", responsor.HandlePost(alarm.SetThreshold))
+	authMux.HandleFunc("/alarm/deletethreshold", responsor.HandlePost(alarm.DeleteThreshold))
+	authMux.HandleFunc("/alarm/getthreshold", responsor.HandleGet(alarm.GetThreshold))
+
 	authHandler := middleware.Auth(authMux)
 	
 	mainMux.HandleFunc("/user/register", responsor.HandlePost(user.Register))

@@ -46,3 +46,21 @@ type User struct {
 func (User) TableName() string {
 	return "user"
 }
+
+type ThresholdInfo struct {
+	Id        string  `json:"id" gorm:"column:id;primaryKey"`
+	HostId    string  `json:"host_id" gorm:"column:host_id"`
+	Metric    string  `json:"metric" gorm:"column:metric"`
+	SubMetric string  `json:"sub_metric" gorm:"column:sub_metric"`
+	Threshold float64 `json:"threshold" gorm:"column:threshold"`
+	Type      string  `json:"type" gorm:"column:type"`
+
+	EntryId int `json:"entry_id" gorm:"column:entry_id"`
+
+	CreatedAt time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"column:updated_at"`
+}
+
+func (ThresholdInfo) TableName() string {
+	return "threshold_info"
+}

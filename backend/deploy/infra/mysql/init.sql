@@ -32,15 +32,17 @@ CREATE TABLE `kubehostwarden`.`user` (
     PRIMARY KEY (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-DROP TABLE IF EXISTS `kubehostwarden`.`alarm_info`;
+DROP TABLE IF EXISTS `kubehostwarden`.`threshold_info`;
 
-CREATE TABLE `kubehostwarden`.`alarm_info` (
+CREATE TABLE `kubehostwarden`.`threshold_info` (
     `id` VARCHAR(255),
-    `user_id` VARCHAR(255),
     `host_id` VARCHAR(255),
-    `alarm_type` VARCHAR(64),
-    `alarm_value` VARCHAR(64),
+    `metric` VARCHAR(64),
+    `sub_metric` VARCHAR(64),
+    `threshold` FLOAT,
+    `type` VARCHAR(64),
+    `entry_id` INT,
     `created_at` TIMESTAMP,
     `updated_at` TIMESTAMP,
-    PRIMARY KEY (`id`)
+     PRIMARY KEY (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

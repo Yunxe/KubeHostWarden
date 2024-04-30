@@ -1,6 +1,5 @@
 package constant
 
-
 type ContextKey string
 
 const (
@@ -11,4 +10,11 @@ const (
 const (
 	DARWIN = "darwin"
 	LINUX  = "linux"
+)
+
+type ThresholdType string
+
+const (
+	ABOVE ThresholdType = "above"
+	BELOW ThresholdType = "below"
 )

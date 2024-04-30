@@ -43,6 +43,12 @@ func ResponsorEncoder(w http.ResponseWriter, resp Responsor) {
 func HandleGet(handler func(context.Context, url.Values) Responsor) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			w.Write([]byte(`{"message": "method not allowed, use GET"}`))
+			return
+		}
+		
 		w.WriteHeader(http.StatusOK)
 
 		query := r.URL.Query()
@@ -62,6 +68,12 @@ func HandleGet(handler func(context.Context, url.Values) Responsor) http.Handler
 func HandlePost[reqType any](handlerFunc func(ctx context.Context, req reqType) Responsor) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			w.Write([]byte(`{"message": "method not allowed, use POST"}`))
+			return
+		}
+
 		w.WriteHeader(http.StatusOK)
 
 		req, err := Decode[reqType](r.Body)

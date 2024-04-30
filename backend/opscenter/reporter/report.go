@@ -35,7 +35,6 @@ func Report(ctx context.Context, values url.Values) resp.Responsor {
 	}
 }
 
-// fetchData 根据 hostId 从 InfluxDB 中查询数据
 func fetchData(hostId string, metricType string) ([]map[string]interface{}, error) {
 	queryApi := db.GetInfluxClient().Client.QueryAPI(os.Getenv("INFLUXDB_ORG"))
 	query := fmt.Sprintf(`from(bucket: "%s")

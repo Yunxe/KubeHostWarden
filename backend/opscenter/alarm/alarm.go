@@ -1,58 +1,40 @@
 package alarm
 
 import (
-	"encoding/json"
+	"context"
+	"fmt"
 	"kubehostwarden/db"
-	"net/http"
-	"time"
-
-	"github.com/google/uuid"
+	"kubehostwarden/utils/constant"
+	"kubehostwarden/utils/email"
+	"os"
 )
 
-type AlarmInfo struct {
-	Id         string  `json:"id" gorm:"primaryKey"`
-	UserId     string  `json:"userId" gorm:"column:user_id"`
-	HostId     string  `json:"hostId" gorm:"column:host_id"`
-	AlarmType  string  `json:"alarmType" gorm:"column:alarm_type"`
-	AlarmValue float64 `json:"alarmValue" gorm:"column:alarm_value"`
-
-	CreatedAt time.Time `json:"created_at" gorm:"column:created_at"`
-	UpdatedAt time.Time `json:"updated_at" gorm:"column:updated_at"`
-}
-
-func (AlarmInfo) TableName() string {
-	return "alarm_info"
-}
-
-type AlarmInfoRequest struct {
-	UserId     string  `json:"userId" gorm:"column:user_id"`
-	HostId     string  `json:"hostId" gorm:"column:host_id"`
-	AlarmType  string  `json:"alarmType" gorm:"column:alarm_type"`
-	AlarmValue float64 `json:"alarmValue" gorm:"column:alarm_value"`
-}
-
-func SetAlarm(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	var alarmInfoReq AlarmInfoRequest
-	err := json.NewDecoder(r.Body).Decode(&alarmInfoReq)
+func CheckThreshold(ctx context.Context, to string, hostId string, metric string, subMetric string, threshold float64, thresholdType constant.ThresholdType) {
+	queryApi := db.GetInfluxClient().Client.QueryAPI(os.Getenv("INFLUXDB_ORG"))
+	query := fmt.Sprintf(`
+	from(bucket: "%s")
+	|> range(start: -1h)
+	|> filter(fn: (r) => r["hostId"] == "%s" and r["_measurement"] == "%s" and r["_field"] == "%s")
+	|> last()
+	|> yield(name: "last")`, os.Getenv("INFLUXDB_BUCKET"), hostId, metric, subMetric)
+	result, err := queryApi.Query(context.Background(), query)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error": "invalid request body"}`))
+		fmt.Println("failed to query data for host: ", err)
 		return
 	}
 
-	alarmInfo := AlarmInfo{
-		Id:         uuid.NewString()[:8],
-		UserId:     alarmInfoReq.UserId,
-		HostId:     alarmInfoReq.HostId,
-		AlarmType:  alarmInfoReq.AlarmType,
-		AlarmValue: alarmInfoReq.AlarmValue,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	for result.Next() {
+		value := result.Record().Value().(float64)
+		fmt.Println(value)
+		if thresholdType == constant.ABOVE && value >= threshold {
+			email.SendEmail(to, "阈值警报", fmt.Sprintf("阈值%s为%s的%s超过%f", metric, hostId, subMetric, threshold))
+		} else if thresholdType == constant.BELOW && value < threshold {
+			email.SendEmail(to, "阈值警报", fmt.Sprintf("阈值%s为%s的%s低于%f", metric, hostId, subMetric, threshold))
+		}
+
 	}
 
-	db.GetMysqlClient().Client.Save(&alarmInfo)
-
-	w.Write([]byte(`successfully set alarm`))
+	if result.Err() != nil {
+		fmt.Println("query parsing error: ", result.Err())
+	}
 }

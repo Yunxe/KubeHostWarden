@@ -1,10 +1,11 @@
-package logger
+package log
 
 import (
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"os"
 	"time"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var logger *zap.SugaredLogger
@@ -23,11 +24,11 @@ func NewLogger() *zap.Logger {
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 
 	config := zap.Config{
-		Encoding:          "json",
-		Level:             zap.NewAtomicLevelAt(zapcore.InfoLevel),
-		OutputPaths:       []string{"stdout"},
-		ErrorOutputPaths:  []string{"stderr"},
-		EncoderConfig:     encoderConfig,
+		Encoding:         "json",
+		Level:            zap.NewAtomicLevelAt(zapcore.InfoLevel),
+		OutputPaths:      []string{"stdout"},
+		ErrorOutputPaths: []string{"stderr"},
+		EncoderConfig:    encoderConfig,
 	}
 
 	// 根据环境变量设置日志级别

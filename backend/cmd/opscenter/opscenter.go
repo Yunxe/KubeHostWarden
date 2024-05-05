@@ -4,13 +4,13 @@ import (
 	"flag"
 	"kubehostwarden/db"
 	"kubehostwarden/opscenter"
-	"kubehostwarden/utils/logger"
+	"kubehostwarden/utils/log"
 
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	defer logger.Sync()
+	defer log.Sync()
 
 	// 定义命令行参数
 	var envFilePath string
@@ -23,21 +23,21 @@ func main() {
 	if envFilePath != "" {
 		err := godotenv.Load(envFilePath)
 		if err != nil {
-			logger.Error("Failed to load .env file", "error", err.Error())
+			log.Error("Failed to load .env file", "error", err.Error())
 		} else {
-			logger.Info("Loaded .env file", "path", envFilePath)
+			log.Info("Loaded .env file", "path", envFilePath)
 		}
 	}
 
 	// 设置MySQL数据库
 	if err := db.SetupMysql(); err != nil {
-		logger.Fatal("Failed to setup mysql", "error", err)
+		log.Fatal("Failed to setup mysql", "error", err)
 		panic(err)
 	}
 
 	// 设置InfluxDB
 	if err := db.SetupInfluxDB(); err != nil {
-		logger.Fatal("Failed to setup influxdb", "error", err)
+		log.Fatal("Failed to setup influxdb", "error", err)
 		panic(err)
 	}
 

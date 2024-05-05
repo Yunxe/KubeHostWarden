@@ -1,46 +1,78 @@
 import React, { useState, useEffect } from "react";
-import { Card, Col, Row, Spin } from "antd";
 import axios from "axios";
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from "react-router-dom";
+import { Card, Col, Row, Spin, Menu, Dropdown, Button, Modal, Form, Input, Select } from "antd";
+import { MoreOutlined } from "@ant-design/icons"; // 引入更多操作图标
 
 export const HostRetrieve = () => {
   const [hosts, setHosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate(); 
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [currentHostId, setCurrentHostId] = useState(null);
+  const [form] = Form.useForm();
+  const navigate = useNavigate();
+
+  const showModal = (hostId) => {
+    setCurrentHostId(hostId);
+    setIsModalVisible(true);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleMenuClick = (hostId, key) => {
+    if (key === "setThreshold") {
+      showModal(hostId);
+    } else if (key === "deleteHost") {
+      if (window.confirm("您确定要删除此主机吗？")) {
+        deleteHost(hostId);
+      }
+    }
+  };
+
+  const deleteHost = async (hostId) => {
+    console.log("删除主机:", hostId);
+  };
+
+  const onFinish = async (values) => {
+    console.log("阈值设置信息:", values);
+    setIsModalVisible(false);
+    // 在这里添加调用后端API的代码
+  };
+
+  const menu = (hostId) => (
+    <Menu onClick={(e) => {
+      e.domEvent.stopPropagation();
+      handleMenuClick(hostId, e.key);
+    }}>
+      <Menu.Item key="setThreshold">设置阈值</Menu.Item>
+      <Menu.Item key="deleteHost">删除主机</Menu.Item>
+    </Menu>
+  );
 
   useEffect(() => {
     const fetchHosts = async () => {
-      const token = localStorage.getItem("token"); // 获取token
+      const token = localStorage.getItem("token");
       if (!token) {
-        window.location.href = "/login"; // 未登录或会话过期时跳转到登录页
-        return; // 如果没有token，则终止请求
+        window.location.href = "/login";
+        return;
       }
       try {
-        const response = await axios.get(
-          "http://localhost:8080/host/retrieve",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`, // 将token添加到请求头中
-            },
-          }
-        );
-        if (response.data.code === 200) {
-          setHosts(response.data.result);
-        } else {
-          console.error("Failed to retrieve hosts:", response.data.message);
-        }
+        const response = await axios.get("http://localhost:8080/host/retrieve", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setHosts(response.data.result);
       } catch (error) {
-        console.error("Error fetching hosts:", error);
+        console.error("获取主机数据失败:", error);
       }
       setLoading(false);
     };
 
     fetchHosts();
   }, []);
-
-  const handleCardClick = (hostId) => {
-    navigate(`/hosts/report?host_id=${hostId}`); // 使用 navigate 进行路由跳转
-  };
 
   if (loading) {
     return <Spin size="large" />;
@@ -52,29 +84,72 @@ export const HostRetrieve = () => {
         {hosts.map((host) => (
           <Col key={host.id} span={8}>
             <Card
-              title={host.hostname}
+              title={
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  {host.hostname}
+                  <Dropdown overlay={menu(host.id)} trigger={["click"]}>
+                    <Button type="text" icon={<MoreOutlined />} onClick={(e) => e.stopPropagation()} />
+                  </Dropdown>
+                </div>
+              }
               bordered={false}
               hoverable
-              onClick={() => handleCardClick(host.id)} // 添加点击事件处理器
+              onClick={() => navigate(`/hosts/report?host_id=${host.id}`)}
               style={{ cursor: "pointer" }}
             >
-              <p>
-                OS: {host.os} {host.os_version}
-              </p>
-              <p>
-                Kernel: {host.kernel} {host.kernel_version}
-              </p>
-              <p>Architecture: {host.arch}</p>
-              <p>IP Address: {host.ip_addr}</p>
-              <p>Memory Total: {host.memory_total}</p>
-              <p>Disk Total: {host.disk_total}</p>
-              <p>Owner: {host.owner}</p>
-              <p>Created At: {new Date(host.created_at).toLocaleString()}</p>
-              <p>Updated At: {new Date(host.updated_at).toLocaleString()}</p>
+              <p>操作系统: {host.os} {host.os_version}</p>
+              <p>内核版本: {host.kernel} {host.kernel_version}</p>
+              <p>架构: {host.arch}</p>
+              <p>IP地址: {host.ip_addr}</p>
+              <p>总内存: {host.memory_total}</p>
+              <p>总硬盘空间: {host.disk_total}</p>
+              <p>所有者: {host.owner}</p>
+              <p>创建时间: {new Date(host.created_at).toLocaleString()}</p>
+              <p>更新时间: {new Date(host.updated_at).toLocaleString()}</p>
             </Card>
           </Col>
         ))}
       </Row>
+      <Modal
+        title="设置阈值"
+        visible={isModalVisible}
+        onCancel={handleCancel}
+        footer={null}
+      >
+        <Form form={form} onFinish={onFinish}>
+          <Form.Item
+            name="metric"
+            rules={[{ required: true, message: "请选择指标类型！" }]}
+          >
+            <Select placeholder="选择指标类型">
+              <Select.Option value="cpu">CPU</Select.Option>
+              <Select.Option value="memory">内存</Select.Option>
+              <Select.Option value="disk">磁盘</Select.Option>
+              <Select.Option value="load">负载</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="threshold"
+            rules={[{ required: true, message: "请输入阈值！" }]}
+          >
+            <Input type="number" placeholder="输入阈值" />
+          </Form.Item>
+          <Form.Item
+            name="type"
+            rules={[{ required: true, message: "请选择类型！" }]}
+          >
+            <Select placeholder="选择类型">
+              <Select.Option value="above">高于</Select.Option>
+              <Select.Option value="below">低于</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit">
+              设置阈值
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

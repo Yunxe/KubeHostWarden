@@ -3,9 +3,10 @@ package opscenter
 import (
 	"kubehostwarden/opscenter/alarm"
 	opsHost "kubehostwarden/opscenter/host"
+	"kubehostwarden/opscenter/logger"
 	"kubehostwarden/opscenter/reporter"
 	"kubehostwarden/opscenter/user"
-	"kubehostwarden/utils/logger"
+	log1 "kubehostwarden/utils/log"
 	"kubehostwarden/utils/middleware"
 	"kubehostwarden/utils/responsor"
 	"log"
@@ -26,12 +27,14 @@ func NewServer() {
 	authMux.HandleFunc("/alarm/setthreshold", responsor.HandlePost(alarm.SetThreshold))
 	authMux.HandleFunc("/alarm/deletethreshold", responsor.HandlePost(alarm.DeleteThreshold))
 	authMux.HandleFunc("/alarm/getthreshold", responsor.HandleGet(alarm.GetThreshold))
+	// logger api
+	authMux.HandleFunc("/logger/get", responsor.HandleGet(logger.GetLogs))
 
 	authHandler := middleware.Auth(authMux)
-	
+
 	mainMux.HandleFunc("/user/register", responsor.HandlePost(user.Register))
 	mainMux.HandleFunc("/user/login", responsor.HandlePost(user.Login))
-	
+
 	mainMux.HandleFunc("/reporter/report", responsor.HandleGet(reporter.Report))
 	mainMux.HandleFunc("/health", health)
 
@@ -42,7 +45,7 @@ func NewServer() {
 	httpServer.Handler = middleware.Cors(mainMux)
 	httpServer.Addr = ":8080"
 
-	logger.Info("Opscenter server started", "addr", httpServer.Addr)
+	log1.Info("Opscenter server started", "addr", httpServer.Addr)
 	err := httpServer.ListenAndServe()
 	if err != nil {
 		log.Fatalf("failed to start http server: %v", err)

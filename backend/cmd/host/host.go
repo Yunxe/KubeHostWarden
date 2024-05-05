@@ -5,7 +5,7 @@ import (
 	"flag"
 	"kubehostwarden/db"
 	"kubehostwarden/host"
-	"kubehostwarden/utils/logger"
+	"kubehostwarden/utils/log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -21,9 +21,9 @@ func main() {
 	if envFilePath != "" {
 		err := godotenv.Load(envFilePath)
 		if err != nil {
-			logger.Error("Failed to load .env file", "error", err.Error())
+			log.Error("Failed to load .env file", "error", err.Error())
 		} else {
-			logger.Info("Loaded .env file", "path", envFilePath)
+			log.Info("Loaded .env file", "path", envFilePath)
 		}
 	}
 
@@ -42,13 +42,13 @@ func main() {
 
 	go func() {
 		<-signals
-		logger.Info("Shutting down gracefully...")
+		log.Info("Shutting down gracefully...")
 		cancel()
 	}()
 
 	<-ctx.Done()
 
-	logger.Info("Exiting...")
+	log.Info("Exiting...")
 	db.GetInfluxClient().Client.Close()
 	db.GetInfluxClient().Client.Close()
 }

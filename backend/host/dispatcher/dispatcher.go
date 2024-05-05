@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"kubehostwarden/db"
 	"kubehostwarden/host/common"
-	"kubehostwarden/utils/logger"
+	"kubehostwarden/utils/log"
 	"os"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -24,7 +24,7 @@ func Dispatch(ctx context.Context, c *common.Collector) {
 		case <-ctx.Done():
 			return
 		case err := <-c.ReturnError():
-			logger.Error("producing error", "error", err.Error(), "host", os.Getenv("HOST"), "type", c.MetricType)
+			log.Error("producing error", "error", err.Error(), "host", os.Getenv("HOST"), "type", c.MetricType)
 			continue
 		case point := <-c.ReturnPonit():
 			p := influxdb2.NewPoint(point.Measurement, point.Tags, point.Fields, point.Ts)

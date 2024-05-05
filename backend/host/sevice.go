@@ -7,7 +7,7 @@ import (
 	"kubehostwarden/host/dispatcher"
 	"kubehostwarden/host/linux"
 	"kubehostwarden/utils/constant"
-	"kubehostwarden/utils/logger"
+	"kubehostwarden/utils/log"
 	"sync"
 )
 
@@ -19,7 +19,7 @@ func NewHostService(ctx context.Context) {
 
 	switch common.GetOSType() {
 	case constant.DARWIN:
-		logger.Info("Starting host service for Darwin")
+		log.Info("Starting host service for Darwin")
 		metricsConfig := darwin.NewCollectorConfig()
 		for _, metricConfig := range metricsConfig {
 			collector := common.NewCollector(metricConfig.Type)
@@ -36,7 +36,7 @@ func NewHostService(ctx context.Context) {
 			}(&collector)
 		}
 	case constant.LINUX:
-		logger.Info("Starting host service for Linux")
+		log.Info("Starting host service for Linux")
 		metricsConfig := linux.NewCollectorConfig()
 		for _, metricConfig := range metricsConfig {
 			collector := common.NewCollector(metricConfig.Type)
@@ -53,7 +53,7 @@ func NewHostService(ctx context.Context) {
 			}(&collector)
 		}
 	default:
-		logger.Error("Unsupported OS type", "osType", common.GetOSType())
+		log.Error("Unsupported OS type", "osType", common.GetOSType())
 	}
 
 	wg.Wait()

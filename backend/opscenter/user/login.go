@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"kubehostwarden/db"
+	"kubehostwarden/opscenter/logger"
 	"kubehostwarden/types"
 	resp "kubehostwarden/utils/responsor"
 	"net/http"
@@ -62,6 +63,7 @@ func Login(ctx context.Context, loginReq LoginReq) resp.Responsor {
 		}
 	}
 
+	logger.Info(existedUser.Id, "用户登录", "用户 ID:", existedUser.Id, "用户名:", existedUser.Username, "邮箱:", existedUser.Email)
 	return resp.Responsor{
 		Code:    http.StatusOK,
 		Message: "login successfully",

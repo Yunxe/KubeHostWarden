@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"kubehostwarden/db"
+	"kubehostwarden/opscenter/logger"
 	"kubehostwarden/types"
 	"kubehostwarden/utils/constant"
 	resp "kubehostwarden/utils/responsor"
@@ -58,12 +59,14 @@ func SetThreshold(ctx context.Context, req setThresholdReq) resp.Responsor {
 	threshold.EntryId = int(entryId)
 	res = db.GetMysqlClient().Client.WithContext(ctx).Save(threshold)
 	if res.Error != nil {
+		scheduler.RemoveJob(cron.EntryID(threshold.EntryId))
 		return resp.Responsor{
 			Code:    http.StatusInternalServerError,
 			Message: fmt.Sprintf("failed to save threshold: %v", res.Error),
 		}
 	}
 
+	logger.Info(userId, "阈值设置成功", "阈值:", threshold)
 	return resp.Responsor{
 		Code:    http.StatusOK,
 		Message: "threshold set successfully",
@@ -114,6 +117,7 @@ func DeleteThreshold(ctx context.Context, req deleteThresholdReq) resp.Responsor
 		}
 	}
 
+	logger.Info(ctx.Value(constant.UserIDKey).(string), "阈值删除成功", "阈值:", threshold)
 	return resp.Responsor{
 		Code:    http.StatusOK,
 		Message: "threshold deleted successfully",

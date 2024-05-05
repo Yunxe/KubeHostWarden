@@ -3,7 +3,7 @@
 > An advanced version of an APM-Server project, which also serves as graduation project.
 
 ## Intro
-A system which automatically collects metrics from host machine and save them to Influxdb.
+A system which automatically collects metrics from host machine and saves them to Influxdb.
 
 ## Run
 ### Build images
@@ -14,5 +14,5 @@ A system which automatically collects metrics from host machine and save them to
 1. ```kind load docker-image opscenter:latest```
 2. ```kind load docker-image host:latest```
 
-### Depoly
+### Deploy
 1. ```kubectl apply -f backend/deploy/opscenter/```

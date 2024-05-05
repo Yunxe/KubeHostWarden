@@ -8,7 +8,6 @@ import (
 )
 
 func NewSSHClient(sshInfo types.SSHInfo) (*ssh.Client, error) {
-	fmt.Printf("sshInfo: %v\n", sshInfo)
 	sshConfig := &ssh.ClientConfig{
 		User: sshInfo.User,
 		Auth: []ssh.AuthMethod{

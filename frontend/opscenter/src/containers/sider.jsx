@@ -3,12 +3,13 @@ import {
   FileOutlined,
   LaptopOutlined,
   NotificationOutlined,
+  AlertOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
 import { Layout, Menu } from "antd";
 import Sider from "antd/es/layout/Sider";
 import React from "react";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 
 const { Header, Content, Footer } = Layout;
 const { SubMenu } = Menu; // 引入 SubMenu 组件
@@ -31,12 +32,19 @@ export const SiderLayout = () => {
               <Link to="/hosts/retrieve">查看主机</Link>
             </Menu.Item>
           </SubMenu>
-          <Menu.Item key="3" icon={<NotificationOutlined />}>
-            <Link to="/alerts">警报</Link>
-          </Menu.Item>
-          <Menu.Item key="4" icon={<FileOutlined />}>
-            <Link to="/logs">日志</Link>
-          </Menu.Item>
+          <SubMenu key="sub2" icon={<AlertOutlined />} title="警报">
+            <Menu.Item key="3" icon={<PlusOutlined />}>
+              <Link to="/alarm/setthreshold">添加阈值</Link>
+            </Menu.Item>
+            <Menu.Item key="4" icon={<EyeOutlined />}>
+              <Link to="/alarm/threshold">查看阈值</Link>
+            </Menu.Item>
+          </SubMenu>
+          <SubMenu key="sub3" icon={<FileOutlined />} title="日志">
+            <Menu.Item key="5" icon={<EyeOutlined />}>
+              <Link to="/logger/view">查看日志</Link>
+            </Menu.Item>
+          </SubMenu>
           {/* 更多菜单项... */}
         </Menu>
       </Sider>

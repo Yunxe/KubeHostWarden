@@ -51,8 +51,8 @@ export const HostAdd = () => {
         form={form}
         name="hostForm"
         onFinish={onFinish}
-        labelCol={{ span: 6 }}
-        wrapperCol={{ span: 10 }}
+        labelCol={{ span: 8 }}
+        wrapperCol={{ span: 8 }}
       >
         <Form.Item
           label="ip地址"

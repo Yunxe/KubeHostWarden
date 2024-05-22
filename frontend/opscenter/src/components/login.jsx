@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Form, Input, Button, Checkbox, Card } from "antd";
+import { Form, Input, Button, Checkbox, Card, Alert } from "antd";
 import { UserOutlined, LockOutlined, MailOutlined } from "@ant-design/icons";
 import axios from "axios";
 
@@ -9,9 +9,18 @@ const Login = () => {
 
   const onFinish = async (values) => {
     setLoading(true);
-    const endpoint = mode === "login" ? "http://localhost:8080/user/login" : "http://localhost:8080/user/register";
-    const data = mode === "login" ? { email: values.email, password: values.password } :
-      { username: values.username, password: values.password, email: values.email };
+    const endpoint =
+      mode === "login"
+        ? "http://localhost:8080/user/login"
+        : "http://localhost:8080/user/register";
+    const data =
+      mode === "login"
+        ? { email: values.email, password: values.password }
+        : {
+            username: values.username,
+            password: values.password,
+            email: values.email,
+          };
 
     try {
       const response = await axios.post(endpoint, data);
@@ -19,13 +28,16 @@ const Login = () => {
       if (code === 200) {
         if (mode === "login") {
           localStorage.setItem("token", result.token);
-          window.location.href = "/";  // 只有在登录成功时跳转到根路由
+          window.location.href = "/"; // 只有在登录成功时跳转到根路由
         } else {
-          setMode("login");  // 注册成功，切换到登录模式
+          setMode("login"); // 注册成功，切换到登录模式
           console.log("注册成功，请登录");
         }
       } else {
-        console.error(mode === "login" ? "登录失败" : "注册失败", result.message);
+        console.error(
+          mode === "login" ? "登录失败" : "注册失败",
+          result.message
+        );
       }
     } catch (error) {
       console.error(mode === "login" ? "登录失败:" : "注册失败:", error);
@@ -35,11 +47,18 @@ const Login = () => {
   };
 
   const toggleMode = () => {
-    setMode(prevMode => prevMode === "login" ? "register" : "login");
+    setMode((prevMode) => (prevMode === "login" ? "register" : "login"));
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+      }}
+    >
       <Card title={mode === "login" ? "登录" : "注册"} style={{ width: 300 }}>
         <Form
           name="login_form"
@@ -51,14 +70,20 @@ const Login = () => {
               name="username"
               rules={[{ required: true, message: "请输入您的用户名!" }]}
             >
-              <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="用户名" />
+              <Input
+                prefix={<UserOutlined className="site-form-item-icon" />}
+                placeholder="用户名"
+              />
             </Form.Item>
           )}
           <Form.Item
             name="email"
             rules={[{ required: true, message: "请输入您的邮箱!" }]}
           >
-            <Input prefix={<MailOutlined className="site-form-item-icon" />} placeholder="邮箱" />
+            <Input
+              prefix={<MailOutlined className="site-form-item-icon" />}
+              placeholder="邮箱"
+            />
           </Form.Item>
           <Form.Item
             name="password"
@@ -78,7 +103,12 @@ const Login = () => {
             </Form.Item>
           )}
           <Form.Item>
-            <Button type="primary" htmlType="submit" className="login-form-button" loading={loading}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              className="login-form-button"
+              loading={loading}
+            >
               {mode === "login" ? "登录" : "注册"}
             </Button>
             <Button type="link" onClick={toggleMode} style={{ float: "right" }}>

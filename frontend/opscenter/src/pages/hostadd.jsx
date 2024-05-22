@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Form, Input, Button, Select } from "antd";
+import { Form, Input, Button, Select ,Alert} from "antd";
 import AlertModal from "../components/alertmodal";
 
 export const HostAdd = () => {
@@ -66,7 +66,7 @@ export const HostAdd = () => {
           name="port"
           rules={[{ required: true, message: "请输入端口号！" }]}
         >
-          <Input type="number" placeholder="e.g. 22" />
+          <Input type="text" placeholder="e.g. 22" />
         </Form.Item>
         <Form.Item
           label="用户名"
@@ -92,7 +92,7 @@ export const HostAdd = () => {
             <Select.Option value="darwin">MacOS</Select.Option>
           </Select>
         </Form.Item>
-        <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+        <Form.Item wrapperCol={{ offset: 11, span: 16 }}>
           <Button type="primary" htmlType="submit">
             提交
           </Button>

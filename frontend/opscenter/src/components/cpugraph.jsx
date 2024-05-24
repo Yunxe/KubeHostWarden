@@ -1,16 +1,18 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import moment from 'moment';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export const CPUGraph = ({ data }) => {
-  const formatXAxis = (tickItem) => {
-    return tickItem; // X轴已经是格式化的时间，无需再次格式化
-  };
+  const formattedData = data.map(item => ({
+    time: item.time,
+    idle: item.idle,
+    user: item.user,
+    system: item.system
+  }));
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <LineChart
-        data={data}
+      <AreaChart
+        data={formattedData}
         margin={{
           top: 5,
           right: 30,
@@ -19,14 +21,13 @@ export const CPUGraph = ({ data }) => {
         }}
       >
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="time" tickFormatter={formatXAxis} />
+        <XAxis dataKey="time" />
         <YAxis />
         <Tooltip />
-        <Legend />
-        <Line type="monotone" dataKey="idle" stroke="#8884d8" name="Idle CPU" activeDot={{ r: 8 }} />
-        <Line type="monotone" dataKey="user" stroke="#82ca9d" name="User CPU" activeDot={{ r: 8 }} />
-        <Line type="monotone" dataKey="system" stroke="#ffc658" name="System CPU" activeDot={{ r: 8 }} />
-      </LineChart>
+        <Area type="monotone" dataKey="idle" stroke="#8884d8" fillOpacity={0.5} fill="#8884d8" />
+        <Area type="monotone" dataKey="user" stroke="#82ca9d" fillOpacity={0.5} fill="#82ca9d" />
+        <Area type="monotone" dataKey="system" stroke="#ffc658" fillOpacity={0.5} fill="#ffc658" />
+      </AreaChart>
     </ResponsiveContainer>
   );
 };

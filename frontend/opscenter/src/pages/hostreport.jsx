@@ -10,7 +10,7 @@ import { LoadGraph } from '../components/loadgraph';
 
 const processData = (rawData) => {
   const groupedData = rawData.reduce((acc, item) => {
-    const time = moment(item._time).format('HH:mm:ss'); // 格式化时间
+    const time = moment(item._time).format('HH:mm:ss');
     if (!acc[time]) {
       acc[time] = { time };
     }
@@ -30,24 +30,36 @@ export const HostReport = () => {
   const [loadData, setLoadData] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchData = async (mt, setData) => {
+    try {
+      const response = await axios.get(`http://localhost:8080/reporter/report?hostId=${hostId}&mt=${mt}`);
+      const formattedData = processData(response.data.result);
+      setData(formattedData);
+    } catch (error) {
+      console.error('Error fetching report:', error);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async (mt, setData) => {
-      try {
-        const response = await axios.get(`http://localhost:8080/reporter/report?hostId=${hostId}&mt=${mt}`);
-        const formattedData = processData(response.data.result);
-        setData(formattedData);
-      } catch (error) {
-        console.error('Error fetching report:', error);
-      }
+    const fetchAllData = async () => {
+      await fetchData('cpu', setCpuData);
+      await fetchData('memory', setMemoryData);
+      await fetchData('disk', setDiskData);
+      await fetchData('load', setLoadData);
     };
 
-    setLoading(true);
-    fetchData('cpu', setCpuData);
-    fetchData('memory', setMemoryData);
-    fetchData('disk', setDiskData);
-    fetchData('load', setLoadData);
-    setLoading(false);
+    fetchAllData(); // Initial fetch
+
+    const intervalId = setInterval(() => {
+      fetchAllData();
+    }, 3000); // Fetch data every 3 seconds
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
   }, [hostId]);
+
+  useEffect(() => {
+    setLoading(false);
+  }, [cpuData, memoryData, diskData, loadData]); // Update loading state when any data updates
 
   if (loading) return <Spin size="large" />;
 

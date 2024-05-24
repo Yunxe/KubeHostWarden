@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Card, Col, Row, Spin, Menu, Dropdown, Button, Modal, Form, Input, Select } from "antd";
+import {
+  Card,
+  Col,
+  Row,
+  Spin,
+  Menu,
+  Dropdown,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+} from "antd";
 import { MoreOutlined } from "@ant-design/icons"; // 引入更多操作图标
 
 export const HostRetrieve = () => {
@@ -32,7 +44,30 @@ export const HostRetrieve = () => {
   };
 
   const deleteHost = async (hostId) => {
-    console.log("删除主机:", hostId);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "/login";
+        return;
+      }
+      const response = await axios.post(
+        `http://localhost:8080/host/delete`,
+        { hostId: hostId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.data.code === 200) {
+        alert("删除主机成功！");
+        window.location.reload();
+      } else {
+        alert("删除主机失败！");
+      }
+    } catch (e) {
+      console.error("删除主机失败：", e);
+    }
   };
 
   const onFinish = async (values) => {
@@ -42,10 +77,12 @@ export const HostRetrieve = () => {
   };
 
   const menu = (hostId) => (
-    <Menu onClick={(e) => {
-      e.domEvent.stopPropagation();
-      handleMenuClick(hostId, e.key);
-    }}>
+    <Menu
+      onClick={(e) => {
+        e.domEvent.stopPropagation();
+        handleMenuClick(hostId, e.key);
+      }}
+    >
       <Menu.Item key="setThreshold">设置阈值</Menu.Item>
       <Menu.Item key="deleteHost">删除主机</Menu.Item>
     </Menu>
@@ -59,11 +96,14 @@ export const HostRetrieve = () => {
         return;
       }
       try {
-        const response = await axios.get("http://localhost:8080/host/retrieve", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:8080/host/retrieve",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setHosts(response.data.result);
       } catch (error) {
         console.error("获取主机数据失败:", error);
@@ -85,10 +125,20 @@ export const HostRetrieve = () => {
           <Col key={host.id} span={8}>
             <Card
               title={
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
                   {host.hostname}
                   <Dropdown overlay={menu(host.id)} trigger={["click"]}>
-                    <Button type="text" icon={<MoreOutlined />} onClick={(e) => e.stopPropagation()} />
+                    <Button
+                      type="text"
+                      icon={<MoreOutlined />}
+                      onClick={(e) => e.stopPropagation()}
+                    />
                   </Dropdown>
                 </div>
               }
@@ -97,8 +147,12 @@ export const HostRetrieve = () => {
               onClick={() => navigate(`/hosts/report?host_id=${host.id}`)}
               style={{ cursor: "pointer" }}
             >
-              <p>操作系统: {host.os} {host.os_version}</p>
-              <p>内核版本: {host.kernel} {host.kernel_version}</p>
+              <p>
+                操作系统: {host.os} {host.os_version}
+              </p>
+              <p>
+                内核版本: {host.kernel} {host.kernel_version}
+              </p>
               <p>架构: {host.arch}</p>
               <p>IP地址: {host.ip_addr}</p>
               <p>总内存: {host.memory_total}</p>
@@ -127,6 +181,12 @@ export const HostRetrieve = () => {
               <Select.Option value="disk">磁盘</Select.Option>
               <Select.Option value="load">负载</Select.Option>
             </Select>
+          </Form.Item>
+          <Form.Item
+            name="submetric"
+            rules={[{ required: true, message: "请输入子指标！" }]}
+          >
+            <Input type="text" placeholder="输入子指标" />
           </Form.Item>
           <Form.Item
             name="threshold"

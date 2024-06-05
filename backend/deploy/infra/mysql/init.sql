@@ -36,6 +36,7 @@ DROP TABLE IF EXISTS `kubehostwarden`.`threshold_info`;
 
 CREATE TABLE `kubehostwarden`.`threshold_info` (
     `id` VARCHAR(255),
+    `user_id` VARCHAR(255),
     `host_id` VARCHAR(255),
     `metric` VARCHAR(64),
     `sub_metric` VARCHAR(64),

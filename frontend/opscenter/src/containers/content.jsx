@@ -11,7 +11,6 @@ export const ContentLayout = ({ children }) => {
         <div className="site-layout-content">{children}</div> 
       </Content>
       <Footer style={{ textAlign: "center" }}>
-        OpsCenter ©2021 Created by OpsCenter
       </Footer>
     </Layout>
   );

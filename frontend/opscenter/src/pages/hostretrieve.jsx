@@ -23,6 +23,8 @@ export const HostRetrieve = () => {
   const [currentHostId, setCurrentHostId] = useState(null);
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
 
   const showModal = (hostId) => {
     setCurrentHostId(hostId);
@@ -71,8 +73,37 @@ export const HostRetrieve = () => {
   };
 
   const onFinish = async (values) => {
-    console.log("阈值设置信息:", values);
-    setIsModalVisible(false);
+    const token = localStorage.getItem("token"); // 获取token
+    if (!token) {
+      window.location.href = "/login"; // 未登录或会话过期时跳转到登录页
+      setModalMessage("Authentication failed. Please login.");
+      setModalVisible(true);
+      return;
+    }
+    values.threshold = parseFloat(values.threshold);
+    values.host_id = currentHostId;
+
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/alarm/setthreshold",
+        values,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // 将token添加到请求头中
+          },
+        }
+      );
+      if (response.data.code === 200) {
+        setModalMessage("Threshold set successfully");
+        setModalVisible(true);
+      } else {
+        setModalMessage(`Failed to set threshold: ${response.data.message}`);
+        setModalVisible(true);
+      }
+    } catch (error) {
+      setModalMessage(`Failed to set threshold: ${error.toString()}`);
+      setModalVisible(true);
+    }
     // 在这里添加调用后端API的代码
   };
 
@@ -183,7 +214,7 @@ export const HostRetrieve = () => {
             </Select>
           </Form.Item>
           <Form.Item
-            name="submetric"
+            name="sub_metric"
             rules={[{ required: true, message: "请输入子指标！" }]}
           >
             <Input type="text" placeholder="输入子指标" />

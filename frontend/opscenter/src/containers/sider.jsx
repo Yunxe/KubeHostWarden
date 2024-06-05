@@ -33,15 +33,12 @@ export const SiderLayout = () => {
             </Menu.Item>
           </SubMenu>
           <SubMenu key="sub2" icon={<AlertOutlined />} title="警报">
-            <Menu.Item key="3" icon={<PlusOutlined />}>
-              <Link to="/alarm/setthreshold">添加阈值</Link>
-            </Menu.Item>
-            <Menu.Item key="4" icon={<EyeOutlined />}>
+            <Menu.Item key="3" icon={<EyeOutlined />}>
               <Link to="/alarm/threshold">查看阈值</Link>
             </Menu.Item>
           </SubMenu>
           <SubMenu key="sub3" icon={<FileOutlined />} title="日志">
-            <Menu.Item key="5" icon={<EyeOutlined />}>
+            <Menu.Item key="4" icon={<EyeOutlined />}>
               <Link to="/logger/view">查看日志</Link>
             </Menu.Item>
           </SubMenu>

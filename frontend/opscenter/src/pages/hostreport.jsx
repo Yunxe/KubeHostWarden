@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useCallback } from 'react';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import { Spin } from 'antd';
@@ -30,7 +30,7 @@ export const HostReport = () => {
   const [loadData, setLoadData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async (mt, setData) => {
+  const fetchData = useCallback(async (mt, setData) => {
     try {
       const response = await axios.get(`http://localhost:8080/reporter/report?hostId=${hostId}&mt=${mt}`);
       const formattedData = processData(response.data.result);
@@ -38,7 +38,7 @@ export const HostReport = () => {
     } catch (error) {
       console.error('Error fetching report:', error);
     }
-  };
+  }, [hostId]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -55,7 +55,7 @@ export const HostReport = () => {
     }, 3000); // Fetch data every 3 seconds
 
     return () => clearInterval(intervalId); // Cleanup interval on component unmount
-  }, [hostId]);
+  }, [fetchData]);
 
   useEffect(() => {
     setLoading(false);

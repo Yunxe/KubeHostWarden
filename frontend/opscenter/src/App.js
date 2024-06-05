@@ -5,6 +5,7 @@ import { HostAdd } from "./pages/hostadd";
 import { HostRetrieve } from "./pages/hostretrieve";
 import { HostReport } from "./pages/hostreport";
 import { ThresholdSetting } from "./pages/thresholdadd";
+import {ThresholdGet} from "./pages/thresholdget";
 import { LogViewer } from "./pages/logviewer";
 import Login from "./components/login";
 
@@ -19,6 +20,7 @@ function App() {
           <Route path="hosts/retrieve" element={<HostRetrieve />} />
           <Route path="hosts/report" element={<HostReport />} />
           <Route path="alarm/setthreshold" element={<ThresholdSetting />} />
+          <Route path="/alarm/threshold" element={<ThresholdGet />} />
           <Route path="logger/view" element={<LogViewer />} />
           {/* 在这里可以继续添加更多子路由 */}
         </Route>

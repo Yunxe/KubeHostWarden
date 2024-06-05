@@ -38,6 +38,7 @@ func SetThreshold(ctx context.Context, req setThresholdReq) resp.Responsor {
 
 	var threshold = &types.ThresholdInfo{
 		Id:        uuid.NewString(),
+		UserId:    userId,
 		HostId:    req.HostId,
 		Metric:    req.Metric,
 		SubMetric: req.SubMetric,
@@ -75,9 +76,9 @@ func SetThreshold(ctx context.Context, req setThresholdReq) resp.Responsor {
 }
 
 func GetThreshold(ctx context.Context, values url.Values) resp.Responsor {
-	hostId := values.Get("hostId")
+	userId := ctx.Value(constant.UserIDKey).(string)
 	var thresholds []types.ThresholdInfo
-	res := db.GetMysqlClient().Client.WithContext(ctx).Where("host_id = ?", hostId).Find(&thresholds)
+	res := db.GetMysqlClient().Client.WithContext(ctx).Where("user_id = ?", userId).Find(&thresholds)
 	if res.Error != nil {
 		return resp.Responsor{
 			Code:    http.StatusInternalServerError,

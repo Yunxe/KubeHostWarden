@@ -19,7 +19,7 @@ export const ThresholdSetting = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8080/thresholds/set",
+        "http://localhost:8080/alarm/setthreshold",
         values,
         {
           headers: {

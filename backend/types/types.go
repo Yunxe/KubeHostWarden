@@ -49,6 +49,7 @@ func (User) TableName() string {
 
 type ThresholdInfo struct {
 	Id        string  `json:"id" gorm:"column:id;primaryKey"`
+	UserId    string  `json:"user_id" gorm:"column:user_id"`
 	HostId    string  `json:"host_id" gorm:"column:host_id"`
 	Metric    string  `json:"metric" gorm:"column:metric"`
 	SubMetric string  `json:"sub_metric" gorm:"column:sub_metric"`

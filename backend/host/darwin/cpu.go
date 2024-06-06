@@ -65,7 +65,6 @@ func CollectCPU(ctx context.Context, c *common.Collector) {
 	case <-ctx.Done():
 		return
 	case c.PointCh <- cm.ToPoint():
-		fmt.Printf("cpu point: %v\n", cm.ToPoint())
 		return
 	}
 }

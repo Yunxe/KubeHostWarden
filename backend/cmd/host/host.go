@@ -33,7 +33,6 @@ func main() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
@@ -49,6 +48,5 @@ func main() {
 	<-ctx.Done()
 
 	log.Info("Exiting...")
-	db.GetInfluxClient().Client.Close()
 	db.GetInfluxClient().Client.Close()
 }

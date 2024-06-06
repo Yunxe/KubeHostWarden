@@ -11,20 +11,21 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
-// var writeApi api.WriteAPI
-
-// func init() {
-// }
-
 func Dispatch(ctx context.Context, c *common.Collector) {
 	writeApi := db.GetInfluxClient().Client.WriteAPI(os.Getenv("INFLUXDB_ORG"), os.Getenv("INFLUXDB_BUCKET"))
+	errTolerance := make([]error, 0)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case err := <-c.ReturnError():
-			log.Error("producing error", "error", err.Error(), "host", os.Getenv("HOST"), "type", c.MetricType)
+			log.Error("producing error", "error", err.Error(), "host", os.Getenv("SSH_HOST"), "type", c.MetricType)
+			errTolerance = append(errTolerance, err)
+			if len(errTolerance) > 5 {
+				log.Error("too many errors, stop dispatching", "host", os.Getenv("SSH_HOST"), "type", c.MetricType)
+				return
+			}
 			continue
 		case point := <-c.ReturnPonit():
 			p := influxdb2.NewPoint(point.Measurement, point.Tags, point.Fields, point.Ts)

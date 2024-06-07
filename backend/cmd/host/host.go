@@ -5,6 +5,7 @@ import (
 	"flag"
 	"kubehostwarden/db"
 	"kubehostwarden/host"
+	"kubehostwarden/host/common"
 	"kubehostwarden/utils/log"
 	"os"
 	"os/signal"
@@ -32,7 +33,11 @@ func main() {
 		panic(err)
 	}
 
+	common.InitSSHClient()
+	go common.HeartBeatDetect()
+
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)

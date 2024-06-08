@@ -8,17 +8,17 @@ func NewCollectorConfig() []common.MetricConfig {
 			Type:        "cpu",
 			CollectFunc: CollectCPU,
 		},
-		// {
-		// 	Type:        "memory",
-		// 	CollectFunc: CollectMemory,
-		// },
-		// {
-		// 	Type:        "disk",
-		// 	CollectFunc: CollectDisk,
-		// },
-		// {
-		// 	Type:        "load",
-		// 	CollectFunc: CollectLoad,
-		// },
+		{
+			Type:        "memory",
+			CollectFunc: CollectMemory,
+		},
+		{
+			Type:        "disk",
+			CollectFunc: CollectDisk,
+		},
+		{
+			Type:        "load",
+			CollectFunc: CollectLoad,
+		},
 	}
 }

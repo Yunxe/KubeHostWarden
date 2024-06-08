@@ -7,6 +7,8 @@ import (
 	"kubehostwarden/host/common"
 	"os"
 	"regexp"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -53,30 +55,22 @@ func CollectCPU(ctx context.Context, c *common.Collector) {
 
 	reCPU := regexp.MustCompile(`%Cpu\(s\):\s+(\d+\.\d+)\s+us,\s+(\d+\.\d+)\s+sy,\s+(\d+\.\d+)\s+ni,\s+(\d+\.\d+)\s+id`).FindStringSubmatch(output)
 
-	fmt.Printf("cpu output: %v\n", reCPU)
-	// user, _ := strconv.ParseFloat(strings.TrimSpace(reCPU[1]), 64)
-	// // if err != nil {
-	// // 	c.ErrCh <- fmt.Errorf("failed to parse user: %s", err)
-	// // }
-	// system, _ := strconv.ParseFloat(strings.TrimSpace(reCPU[2]), 64)
-	// // if err != nil {
-	// // 	c.ErrCh <- fmt.Errorf("failed to parse system: %s", err)
-	// // }
-	// nice, _ := strconv.ParseFloat(strings.TrimSpace(reCPU[3]), 64)
-	// idle, _ := strconv.ParseFloat(strings.TrimSpace(reCPU[4]), 64)
+	user, _ := strconv.ParseFloat(strings.TrimSpace(reCPU[1]), 64)
+	system, _ := strconv.ParseFloat(strings.TrimSpace(reCPU[2]), 64)
+	nice, _ := strconv.ParseFloat(strings.TrimSpace(reCPU[3]), 64)
+	idle, _ := strconv.ParseFloat(strings.TrimSpace(reCPU[4]), 64)
 
-	// cm := &CPUMetric{
-	// 	Idle:   idle,
-	// 	System: system,
-	// 	Nice:   nice,
-	// 	User:   user,
-	// }
+	cm := &CPUMetric{
+		Idle:   idle,
+		System: system,
+		Nice:   nice,
+		User:   user,
+	}
 
-	// select {
-	// case <-ctx.Done():
-	// 	return
-	// case c.PointCh <- cm.ToPoint():
-	// 	fmt.Printf("cpu point: %v\n", cm.ToPoint())
-	// 	return
-	// }
+	select {
+	case <-ctx.Done():
+		return
+	case c.PointCh <- cm.ToPoint():
+		return
+	}
 }

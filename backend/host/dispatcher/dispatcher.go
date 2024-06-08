@@ -2,6 +2,7 @@ package dispatcher
 
 import (
 	"context"
+	"fmt"
 	"kubehostwarden/db"
 	"kubehostwarden/host/common"
 	"kubehostwarden/utils/log"
@@ -23,7 +24,7 @@ func Dispatch(ctx context.Context, c *common.Collector) {
 		case point := <-c.ReturnPonit():
 			p := influxdb2.NewPoint(point.Measurement, point.Tags, point.Fields, point.Ts)
 			writeApi.WritePoint(p)
-			// fmt.Printf("write point: %v\n", p)
+			fmt.Printf("write point: %v\n", point)
 		}
 	}
 }
